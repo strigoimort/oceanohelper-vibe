@@ -19,7 +19,7 @@ To build an accessible, modern, and interactive oceanographic platform that simp
 
 ## Core Features
 
-1. Interactive Map
+1. Geospatial Workspace
 
 Visualize oceanographic datasets on an interactive map with multiple basemaps, dynamic layers, and customizable markers.
 
