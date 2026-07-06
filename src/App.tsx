@@ -4,9 +4,7 @@ import AppShell from "./layouts/app-shell";
 import DashboardPage from "./pages/dashboard-page";
 import PlaceholderPage from "./pages/placeholder-page";
 
-import "./App.css";
-
-const toolDescriptions = {
+const toolDescriptions: Record<string, string> = {
   "geospatial-workspace":
     "The geospatial workspace will provide a shared map canvas for layers, measurements, and dataset management.",
   "particle-tracer":
