@@ -67,7 +67,7 @@ The architecture should support future expansion without major refactoring.
 
 The current version of OceanoHelper focuses on six core tools:
 
-1. Interactive Map
+1. Geospatial Workspace
 2. Particle Tracer
 3. Wind Rose
 4. Wave Analysis

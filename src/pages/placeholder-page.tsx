@@ -9,37 +9,37 @@ type PlaceholderPageProps = {
 export default function PlaceholderPage({
   title,
   description,
-  badge = "Planned experience",
+  badge = "Coming Soon",
 }: PlaceholderPageProps) {
   return (
-    <section className="space-y-6 rounded-4xl border border-slate-200/80 bg-white/80 p-8 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.35)] backdrop-blur">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-700">
-          {badge}
-        </span>
-        <span className="text-sm text-slate-500">
-          Shell only • no tool logic yet
-        </span>
-      </div>
+    <div className="space-y-8">
+      <header className="border-b border-slate-200 pb-6">
+        <div className="mb-3 flex items-center gap-3">
+          <span className="border border-slate-300 px-2 py-1 text-xs uppercase tracking-wider text-slate-600">
+            {badge}
+          </span>
 
-      <div className="max-w-2xl space-y-3">
-        <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
-          {title}
-        </h2>
-        <p className="text-base leading-7 text-slate-600">{description}</p>
-      </div>
+          <span className="text-sm text-slate-500">Placeholder Page</span>
+        </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-        This route is configured as a placeholder so the application shell can
-        be navigated before the individual analyses are implemented.
-      </div>
+        <h2 className="text-4xl font-semibold">{title}</h2>
+
+        <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
+          {description}
+        </p>
+      </header>
+
+      <section className="border border-slate-200 bg-slate-50 p-6">
+        This module is currently under development. The application routing,
+        layout, and navigation have already been prepared.
+      </section>
 
       <Link
         to="/"
-        className="inline-flex items-center rounded-full border border-slate-300 bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+        className="inline-flex border border-slate-900 px-5 py-2 text-sm font-medium transition hover:bg-slate-900 hover:text-white"
       >
-        Back to dashboard
+        ← Dashboard
       </Link>
-    </section>
+    </div>
   );
 }
