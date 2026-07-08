@@ -7,9 +7,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="border-b border-slate-200 pb-8">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+        {/* <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
           OceanoHelper
-        </p>
+        </p> */}
 
         <h2 className="text-4xl font-semibold tracking-tight text-slate-900">
           Marine Data Workspace

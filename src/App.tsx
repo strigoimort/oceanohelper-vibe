@@ -25,7 +25,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppShell title="Dashboard" />}>
+        {/* <Route element={<AppShell title="Dashboard" />}> */}
+        <Route element={<AppShell />}>
           <Route index element={<DashboardPage />} />
           <Route
             path="geospatial-workspace"
