@@ -10,7 +10,7 @@ export default function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-6">
+      <nav className="sidebar-scroll flex-1 overflow-y-auto px-3 pb-6">
         <div className="space-y-1">
           {navItems.map((item) => (
             <NavLink

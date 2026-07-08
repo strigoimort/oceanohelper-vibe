@@ -1,5 +1,6 @@
-import { Search, Settings2 } from "lucide-react";
+import { Settings2 } from "lucide-react";
 import { useState } from "react";
+import GlobalSearch from "../search/global-search";
 import logo from "../../assets/oceanohelper-logo.png";
 
 // type AppHeaderProps = {
@@ -9,7 +10,6 @@ import logo from "../../assets/oceanohelper-logo.png";
 
 // export default function AppHeader({ title, description }: AppHeaderProps) {
 export default function AppHeader() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdate] = useState(new Date());
 
   const formattedTime = lastUpdate.toLocaleString("en-GB", {
@@ -47,16 +47,8 @@ export default function AppHeader() {
 
         {/* Search */}
         <div className="hidden w-full max-w-lg   px-8 lg:block">
-          <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 transition-colors focus-within:border-sky-500 focus-within:bg-white">
-            <Search size={18} className="text-slate-400" />
-
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search tools, datasets..."
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-            />
+          <div className="hidden w-full max-w-lg px-8 lg:block">
+            <GlobalSearch />
           </div>
         </div>
 
