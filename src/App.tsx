@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AppShell from "./layouts/app-shell";
 import DashboardPage from "./pages/dashboard-page";
 import PlaceholderPage from "./pages/placeholder-page";
+import GeospatialWorkspacePage from "./pages/geospatial-workspace-page";
 
 import "./App.css";
 
@@ -30,12 +31,7 @@ function App() {
           <Route index element={<DashboardPage />} />
           <Route
             path="geospatial-workspace"
-            element={
-              <PlaceholderPage
-                title="Geospatial Workspace"
-                description={toolDescriptions["geospatial-workspace"]}
-              />
-            }
+            element={<GeospatialWorkspacePage />}
           />
           <Route
             path="particle-tracer"

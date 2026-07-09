@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 
+import GeospatialWorkspacePage from "./geospatial-workspace-page";
+
 type PlaceholderPageProps = {
   title: string;
   description: string;
@@ -11,6 +13,10 @@ export default function PlaceholderPage({
   description,
   badge = "Coming Soon",
 }: PlaceholderPageProps) {
+  if (title === "Geospatial Workspace") {
+    return <GeospatialWorkspacePage />;
+  }
+
   return (
     <div className="space-y-8">
       <header className="border-b border-slate-200 pb-6">
