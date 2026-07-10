@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { BASEMAPS, type BasemapId } from "../../../constants/basemap";
+
 const INITIAL_CENTER: [number, number] = [-2.5, 118];
 const INITIAL_ZOOM = 5;
 
@@ -10,20 +12,25 @@ type CursorPosition = { lat: number; lng: number };
 type GeospatialMapProps = {
   onCursorMove?: (position: CursorPosition | null) => void;
   onZoomChange?: (zoom: number) => void;
+  onMapReady?: (map: L.Map) => void;
+  basemap?: BasemapId;
 };
 
 export default function GeospatialMap({
   onCursorMove,
   onZoomChange,
+  onMapReady,
+  basemap = "streets",
 }: GeospatialMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletRef = useRef<L.Map | null>(null);
+  const baseLayerRef = useRef<L.TileLayer | null>(null);
+  const attributionControlRef = useRef<L.Control.Attribution | null>(null);
+  const currentAttributionRef = useRef<string | null>(null);
 
-  // Keep the latest callbacks in refs so the map-init effect below can stay
-  // dependency-free — otherwise a new inline callback from the parent on
-  // every render would tear down and recreate the whole Leaflet instance.
   const onCursorMoveRef = useRef(onCursorMove);
   const onZoomChangeRef = useRef(onZoomChange);
+  const onMapReadyRef = useRef(onMapReady);
 
   useEffect(() => {
     onCursorMoveRef.current = onCursorMove;
@@ -33,6 +40,11 @@ export default function GeospatialMap({
     onZoomChangeRef.current = onZoomChange;
   }, [onZoomChange]);
 
+  useEffect(() => {
+    onMapReadyRef.current = onMapReady;
+  }, [onMapReady]);
+
+  // Map initialization (runs once).
   useEffect(() => {
     if (!mapRef.current || leafletRef.current) {
       return undefined;
@@ -45,18 +57,10 @@ export default function GeospatialMap({
       attributionControl: false,
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "",
-    }).addTo(map);
-
-    // Default attribution position (bottom-right) would collide with our
-    // custom coordinate readout in the same corner, so it's placed manually.
-    L.control
+    // Attribution text is now populated dynamically per-basemap (see the
+    // basemap-swap effect below), so it starts empty here.
+    attributionControlRef.current = L.control
       .attribution({ position: "topright", prefix: false })
-      .addAttribution(
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      )
       .addTo(map);
 
     L.control.scale({ position: "bottomleft" }).addTo(map);
@@ -83,6 +87,7 @@ export default function GeospatialMap({
     onZoomChangeRef.current?.(map.getZoom());
 
     leafletRef.current = map;
+    onMapReadyRef.current?.(map);
 
     const handleResize = () => {
       map.invalidateSize();
@@ -99,6 +104,37 @@ export default function GeospatialMap({
       leafletRef.current = null;
     };
   }, []);
+
+  // Swap the active tile layer whenever the selected basemap changes.
+  useEffect(() => {
+    const map = leafletRef.current;
+    if (!map) return undefined;
+
+    const config = BASEMAPS[basemap];
+
+    if (baseLayerRef.current) {
+      map.removeLayer(baseLayerRef.current);
+    }
+
+    const layer = L.tileLayer(config.url, {
+      maxZoom: config.maxZoom ?? 19,
+      attribution: "",
+      crossOrigin: config.crossOrigin ?? false,
+    });
+    layer.addTo(map);
+    layer.bringToBack();
+    baseLayerRef.current = layer;
+
+    if (currentAttributionRef.current) {
+      attributionControlRef.current?.removeAttribution(
+        currentAttributionRef.current,
+      );
+    }
+    attributionControlRef.current?.addAttribution(config.attribution);
+    currentAttributionRef.current = config.attribution;
+
+    return undefined;
+  }, [basemap]);
 
   return <div ref={mapRef} className="h-full w-full bg-slate-100" />;
 }
