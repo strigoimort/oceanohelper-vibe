@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Layers as LayersIcon, Check } from "lucide-react";
 
-import { BASEMAPS, type BasemapId } from "../../../constants/basemap";
+import { BASEMAPS, type BasemapId } from "../../../constants/basemaps";
 
 type GeospatialBasemapSwitcherProps = {
   value: BasemapId;

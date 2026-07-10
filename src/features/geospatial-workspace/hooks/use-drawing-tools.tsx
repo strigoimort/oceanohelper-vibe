@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import type { Feature } from "geojson";
 
 import { DRAWING_STYLES } from "../../../constants/drawing";
 import { calculateLineLength, formatDistance } from "../../../utils/geometry";
@@ -442,6 +443,40 @@ export function useDrawingTools(map: L.Map | null) {
     [registerLayer],
   );
 
+  function inferDrawingType(layer: L.Layer): DrawingToolType {
+    if (layer instanceof L.Marker) return "point";
+    if (layer instanceof L.Polygon) return "polygon"; // check before Polyline (Polygon extends it)
+    if (layer instanceof L.Polyline) return "polyline";
+    return "point";
+  }
+
+  const addGeoJsonLayer = useCallback(
+    (feature: Feature, label?: string) => {
+      const geoLayer = L.geoJSON(feature, {
+        pointToLayer: (_, latlng) =>
+          L.marker(latlng, {
+            icon: L.divIcon({
+              className: "",
+              html: pointIconHtml(),
+              iconSize: [12, 12],
+              iconAnchor: [6, 6],
+            }),
+          }),
+        style: (f) => {
+          const geomType = f?.geometry?.type ?? "";
+          return geomType.includes("Polygon")
+            ? DRAWING_STYLES.polygon
+            : DRAWING_STYLES.polyline;
+        },
+      });
+
+      geoLayer.eachLayer((subLayer) => {
+        registerLayer(inferDrawingType(subLayer), subLayer, label);
+      });
+    },
+    [registerLayer],
+  );
+
   const clearAllLayers = useCallback(() => {
     layers.forEach((l) => layerGroupRef.current?.removeLayer(l.leafletLayer));
     setLayers([]);
@@ -485,6 +520,7 @@ export function useDrawingTools(map: L.Map | null) {
     toggleLayerVisibility,
     renameLayer,
     addPointLayer,
+    addGeoJsonLayer,
     clearAllLayers,
   };
 }

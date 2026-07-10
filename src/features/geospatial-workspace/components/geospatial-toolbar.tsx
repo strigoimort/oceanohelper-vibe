@@ -1,5 +1,6 @@
 import {
   Circle,
+  Download,
   Hexagon,
   MapPin,
   MousePointer2,
@@ -7,12 +8,13 @@ import {
   Ruler,
   Spline,
   Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import type { DrawingToolType } from "../hooks/use-drawing-tools";
-import type { BasemapId } from "../../../constants/basemap";
+import type { BasemapId } from "../../../constants/basemaps";
 import GeospatialBasemapSwitcher from "./geospatial-basemap-switcher";
-import GeospatialExportMenu from "./geospatial-export-menu";
+// import GeospatialExportMenu from "./geospatial-export-menu";
 
 const drawingTools: {
   id: DrawingToolType;
@@ -33,7 +35,7 @@ type GeospatialToolbarProps = {
   onToolChange: (tool: DrawingToolType) => void;
   onImportClick: () => void;
   onExportGeoJson: () => void;
-  onExportPng: () => void;
+  // onExportPng: () => void;
   hasLayers: boolean;
   basemap: BasemapId;
   onBasemapChange: (id: BasemapId) => void;
@@ -44,7 +46,7 @@ export default function GeospatialToolbar({
   onToolChange,
   onImportClick,
   onExportGeoJson,
-  onExportPng,
+  // onExportPng,
   hasLayers,
   basemap,
   onBasemapChange,
@@ -84,11 +86,30 @@ export default function GeospatialToolbar({
           <Upload size={18} />
         </button>
 
-        <GeospatialExportMenu
+        {/* <GeospatialExportMenu
           disabled={!hasLayers}
           onExportGeoJson={onExportGeoJson}
           onExportPng={onExportPng}
-        />
+        /> */}
+
+        <button
+          type="button"
+          title="Export as GeoJSON"
+          disabled={!hasLayers}
+          onClick={onExportGeoJson}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl border border-transparent bg-white text-slate-700 transition hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Download size={18} />
+        </button>
+
+        <button
+          type="button"
+          title="Export as PNG — Coming soon"
+          disabled
+          className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-2xl border border-transparent bg-white text-slate-300"
+        >
+          <ImageIcon size={18} />
+        </button>
 
         <GeospatialBasemapSwitcher value={basemap} onChange={onBasemapChange} />
       </div>

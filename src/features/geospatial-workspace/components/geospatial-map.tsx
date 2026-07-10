@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { BASEMAPS, type BasemapId } from "../../../constants/basemap";
+import { BASEMAPS, type BasemapId } from "../../../constants/basemaps";
 
 const INITIAL_CENTER: [number, number] = [-2.5, 118];
 const INITIAL_ZOOM = 5;

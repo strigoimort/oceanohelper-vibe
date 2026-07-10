@@ -1,16 +1,22 @@
 import { useCallback, useState } from "react";
+import type { Feature } from "geojson";
 
-import { parseCsvFile } from "../../../services/file-service";
+import { parseCsvFile, parseShapefile } from "../../../services/file-service";
 import {
   detectColumnMapping,
   type ColumnMapping,
 } from "../../../utils/column-mapping";
 
 export type { ColumnMapping };
+export type ImportKind = "csv" | "shapefile" | null;
 
 export function useDatasetImport() {
   const [isOpen, setIsOpen] = useState(false);
+  const [kind, setKind] = useState<ImportKind>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // CSV-specific state
   const [headers, setHeaders] = useState<string[]>([]);
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [mapping, setMapping] = useState<ColumnMapping>({
@@ -18,43 +24,70 @@ export function useDatasetImport() {
     lng: null,
     name: null,
   });
-  const [error, setError] = useState<string | null>(null);
+
+  // Shapefile-specific state
+  const [shapefileFeatures, setShapefileFeatures] = useState<Feature[]>([]);
 
   const open = useCallback(() => setIsOpen(true), []);
 
   const reset = useCallback(() => {
     setIsOpen(false);
+    setKind(null);
     setFileName(null);
+    setError(null);
     setHeaders([]);
     setRows([]);
     setMapping({ lat: null, lng: null, name: null });
-    setError(null);
+    setShapefileFeatures([]);
   }, []);
 
   const loadFile = useCallback(async (file: File) => {
     setError(null);
+    const lowerName = file.name.toLowerCase();
 
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Only CSV files are supported at the moment.");
+    if (lowerName.endsWith(".csv")) {
+      try {
+        const { headers: parsedHeaders, rows: parsedRows } =
+          await parseCsvFile(file);
+        if (parsedRows.length === 0) {
+          setError("The file doesn't contain any rows.");
+          return;
+        }
+        setKind("csv");
+        setFileName(file.name);
+        setHeaders(parsedHeaders);
+        setRows(parsedRows);
+        setMapping(detectColumnMapping(parsedHeaders));
+      } catch {
+        setError("Failed to read the CSV file. Please check the format.");
+      }
       return;
     }
 
-    try {
-      const { headers: parsedHeaders, rows: parsedRows } =
-        await parseCsvFile(file);
+    if (lowerName.endsWith(".zip")) {
+      try {
+        const collections = await parseShapefile(file);
+        const features = collections.flatMap(
+          (collection) => collection.features,
+        );
 
-      if (parsedRows.length === 0) {
-        setError("The file doesn't contain any rows.");
-        return;
+        if (features.length === 0) {
+          setError("No features found in this shapefile.");
+          return;
+        }
+
+        setKind("shapefile");
+        setFileName(file.name);
+        setShapefileFeatures(features);
+      } catch {
+        setError(
+          "Failed to read the shapefile. Make sure the .zip contains .shp, .shx, and .dbf files.",
+        );
       }
-
-      setFileName(file.name);
-      setHeaders(parsedHeaders);
-      setRows(parsedRows);
-      setMapping(detectColumnMapping(parsedHeaders));
-    } catch {
-      setError("Failed to read the file. Please check the format.");
+      return;
     }
+
+    setError("Unsupported file type. Use .csv or a zipped Shapefile (.zip).");
   }, []);
 
   const validRecords = rows
@@ -75,13 +108,15 @@ export function useDatasetImport() {
     isOpen,
     open,
     reset,
+    kind,
     fileName,
+    error,
+    loadFile,
     headers,
     rows,
     mapping,
     setMapping,
-    error,
-    loadFile,
     validRecords,
+    shapefileFeatures,
   };
 }

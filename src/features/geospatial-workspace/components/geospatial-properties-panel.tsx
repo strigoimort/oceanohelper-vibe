@@ -124,7 +124,7 @@ export default function GeospatialPropertiesPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-slate-100 pb-3">
+      <div className="shrink-0 border-b border-slate-200 pb-3">
         <h1 className="text-lg font-semibold text-slate-900">
           Workspace details
         </h1>
@@ -223,8 +223,8 @@ export default function GeospatialPropertiesPanel({
           )}
         </section>
 
-        <section className="h-19 shrink-0 border-t border-slate-100 pt-3">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        <section className="h-20 shrink-0">
+          <h2 className="text-[11px] border-t pt-2 border-slate-100 font-semibold uppercase tracking-wide text-slate-400">
             Measurements
           </h2>
           <div className="mt-1 space-y-0.5">
@@ -236,7 +236,7 @@ export default function GeospatialPropertiesPanel({
           </div>
         </section>
 
-        <section className="h-16 shrink-0 border-t border-slate-100 pt-3">
+        <section className="h-16 shrink-0 pt-2">
           <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Selected object
           </h2>

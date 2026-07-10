@@ -1,34 +1,50 @@
 import { Upload, X } from "lucide-react";
 import type { ChangeEvent } from "react";
+import type { Feature } from "geojson";
 
-import type { ColumnMapping } from "../hooks/use-dataset-import";
+import type { ColumnMapping, ImportKind } from "../hooks/use-dataset-import";
 
 type GeospatialImportDialogProps = {
   isOpen: boolean;
+  kind: ImportKind;
   fileName: string | null;
+  error: string | null;
+  onFileSelect: (file: File) => void;
+  onConfirm: () => void;
+  onClose: () => void;
+  // csv
   headers: string[];
   rowCount: number;
   validCount: number;
   mapping: ColumnMapping;
-  error: string | null;
-  onFileSelect: (file: File) => void;
   onMappingChange: (mapping: ColumnMapping) => void;
-  onConfirm: () => void;
-  onClose: () => void;
+  // shapefile
+  shapefileFeatures: Feature[];
 };
+
+function summarizeGeometry(features: Feature[]) {
+  const counts: Record<string, number> = {};
+  features.forEach((f) => {
+    const type = f.geometry?.type ?? "Unknown";
+    counts[type] = (counts[type] ?? 0) + 1;
+  });
+  return counts;
+}
 
 export default function GeospatialImportDialog({
   isOpen,
+  kind,
   fileName,
+  error,
+  onFileSelect,
+  onConfirm,
+  onClose,
   headers,
   rowCount,
   validCount,
   mapping,
-  error,
-  onFileSelect,
   onMappingChange,
-  onConfirm,
-  onClose,
+  shapefileFeatures,
 }: GeospatialImportDialogProps) {
   if (!isOpen) return null;
 
@@ -36,6 +52,12 @@ export default function GeospatialImportDialog({
     const file = event.target.files?.[0];
     if (file) onFileSelect(file);
   };
+
+  const geometryCounts =
+    kind === "shapefile" ? summarizeGeometry(shapefileFeatures) : {};
+  const canConfirm =
+    (kind === "csv" && validCount > 0) ||
+    (kind === "shapefile" && shapefileFeatures.length > 0);
 
   return (
     <div className="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40 px-4">
@@ -56,15 +78,18 @@ export default function GeospatialImportDialog({
         {!fileName ? (
           <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 text-sm text-slate-500 hover:border-sky-300 hover:text-sky-600">
             <Upload size={22} />
-            Click to select a CSV file
+            Click to select a file
+            <span className="text-xs text-slate-400">
+              CSV or zipped Shapefile (.zip)
+            </span>
             <input
               type="file"
-              accept=".csv"
+              accept=".csv,.zip"
               className="hidden"
               onChange={handleFileInput}
             />
           </label>
-        ) : (
+        ) : kind === "csv" ? (
           <div className="space-y-4">
             <p className="truncate text-sm text-slate-600">
               <span className="font-medium text-slate-900">{fileName}</span> —{" "}
@@ -103,6 +128,21 @@ export default function GeospatialImportDialog({
               {validCount} of {rowCount} rows have valid coordinates.
             </p>
           </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="truncate text-sm text-slate-600">
+              <span className="font-medium text-slate-900">{fileName}</span> —{" "}
+              {shapefileFeatures.length} features
+            </p>
+
+            <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+              {Object.entries(geometryCounts).map(([type, count]) => (
+                <p key={type}>
+                  {type} — {count}
+                </p>
+              ))}
+            </div>
+          </div>
         )}
 
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -117,11 +157,11 @@ export default function GeospatialImportDialog({
           </button>
           <button
             type="button"
-            disabled={!fileName || validCount === 0}
+            disabled={!canConfirm}
             onClick={onConfirm}
             className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Import {validCount > 0 ? `(${validCount})` : ""}
+            Import
           </button>
         </div>
       </div>

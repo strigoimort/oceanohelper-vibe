@@ -1,15 +1,17 @@
 import { useState } from "react";
-import type L from "leaflet";
+import L from "leaflet";
+import type { FeatureCollection } from "geojson";
 
 import GeospatialMap from "../features/geospatial-workspace/components/geospatial-map";
 import GeospatialPropertiesPanel from "../features/geospatial-workspace/components/geospatial-properties-panel";
 import GeospatialToolbar from "../features/geospatial-workspace/components/geospatial-toolbar";
 import GeospatialImportDialog from "../features/geospatial-workspace/components/geospatial-import-dialog";
-import { exportElementAsPng, downloadTextFile } from "../services/file-service";
+// import { exportElementAsPng, downloadTextFile } from "../services/file-service";
+import { downloadTextFile } from "../services/file-service";
 import { useDrawingTools } from "../features/geospatial-workspace/hooks/use-drawing-tools";
 import { useDatasetImport } from "../features/geospatial-workspace/hooks/use-dataset-import";
 import { layersToGeoJson } from "../utils/geo-export";
-import type { BasemapId } from "../constants/basemap";
+import type { BasemapId } from "../constants/basemaps";
 
 export default function GeospatialWorkspacePage() {
   const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(
@@ -29,17 +31,36 @@ export default function GeospatialWorkspacePage() {
     toggleLayerVisibility,
     renameLayer,
     addPointLayer,
+    addGeoJsonLayer,
   } = useDrawingTools(map);
 
   const importDataset = useDatasetImport();
 
   const handleImportConfirm = () => {
-    const bounds: [number, number][] = [];
-    importDataset.validRecords.forEach((record) => {
-      addPointLayer(record.lat, record.lng, record.name);
-      bounds.push([record.lat, record.lng]);
-    });
-    if (map && bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40] });
+    if (importDataset.kind === "csv") {
+      const bounds: [number, number][] = [];
+      importDataset.validRecords.forEach((record) => {
+        addPointLayer(record.lat, record.lng, record.name);
+        bounds.push([record.lat, record.lng]);
+      });
+      if (map && bounds.length > 0)
+        map.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    if (importDataset.kind === "shapefile") {
+      importDataset.shapefileFeatures.forEach((feature, index) => {
+        addGeoJsonLayer(feature, `Feature ${index + 1}`);
+      });
+
+      if (map) {
+        const bounds = L.geoJSON({
+          type: "FeatureCollection",
+          features: importDataset.shapefileFeatures,
+        } as FeatureCollection).getBounds();
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    }
+
     importDataset.reset();
   };
 
@@ -53,23 +74,23 @@ export default function GeospatialWorkspacePage() {
     );
   };
 
-  const handleExportPng = async () => {
-    if (!map) return;
+  // const handleExportPng = async () => {
+  //   if (!map) return;
 
-    try {
-      await exportElementAsPng(
-        map.getContainer(),
-        `oceanohelper-map-${Date.now()}.png`,
-      );
-    } catch (error) {
-      console.error(error);
-      window.alert(
-        basemap === "streets"
-          ? "Export PNG tidak didukung untuk basemap Streets (tile OpenStreetMap tidak mengizinkan CORS). Ganti ke Dark/Ocean/Satellite/Terrain lalu coba lagi."
-          : "Gagal export PNG. Pastikan package 'html2canvas' sudah terinstall (pnpm add html2canvas), lalu coba lagi.",
-      );
-    }
-  };
+  //   try {
+  //     await exportElementAsPng(
+  //       map.getContainer(),
+  //       `oceanohelper-map-${Date.now()}.png`,
+  //     );
+  //   } catch (error) {
+  //     console.error(error);
+  //     window.alert(
+  //       basemap === "streets"
+  //         ? "Export PNG tidak didukung untuk basemap Streets (tile OpenStreetMap tidak mengizinkan CORS). Ganti ke Dark/Ocean/Satellite/Terrain lalu coba lagi."
+  //         : "Gagal export PNG. Pastikan package 'html2canvas' sudah terinstall (pnpm add html2canvas), lalu coba lagi.",
+  //     );
+  //   }
+  // };
 
   return (
     <div className="flex h-full w-full min-h-0 overflow-hidden bg-slate-50">
@@ -106,7 +127,7 @@ export default function GeospatialWorkspacePage() {
                 onToolChange={setActiveTool}
                 onImportClick={importDataset.open}
                 onExportGeoJson={handleExportGeoJson}
-                onExportPng={handleExportPng}
+                // onExportPng={handleExportPng}
                 hasLayers={layers.length > 0}
                 basemap={basemap}
                 onBasemapChange={setBasemap}
@@ -131,16 +152,18 @@ export default function GeospatialWorkspacePage() {
 
       <GeospatialImportDialog
         isOpen={importDataset.isOpen}
+        kind={importDataset.kind}
         fileName={importDataset.fileName}
+        error={importDataset.error}
+        onFileSelect={importDataset.loadFile}
+        onConfirm={handleImportConfirm}
+        onClose={importDataset.reset}
         headers={importDataset.headers}
         rowCount={importDataset.rows.length}
         validCount={importDataset.validRecords.length}
         mapping={importDataset.mapping}
-        error={importDataset.error}
-        onFileSelect={importDataset.loadFile}
         onMappingChange={importDataset.setMapping}
-        onConfirm={handleImportConfirm}
-        onClose={importDataset.reset}
+        shapefileFeatures={importDataset.shapefileFeatures}
       />
     </div>
   );

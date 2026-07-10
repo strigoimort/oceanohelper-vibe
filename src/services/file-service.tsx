@@ -1,4 +1,6 @@
 import Papa from "papaparse";
+import shp from "shpjs";
+import type { FeatureCollection } from "geojson";
 
 export type ParsedCsv = {
   headers: string[];
@@ -16,6 +18,17 @@ export function parseCsvFile(file: File): Promise<ParsedCsv> {
       error: (error) => reject(error),
     });
   });
+}
+
+/**
+ * Parses a zipped Shapefile (.shp + .shx + .dbf, optionally .prj) into one
+ * or more GeoJSON FeatureCollections. shpjs automatically reprojects
+ * coordinates to WGS84 when a .prj file is present.
+ */
+export async function parseShapefile(file: File): Promise<FeatureCollection[]> {
+  const buffer = await file.arrayBuffer();
+  const result = await shp(buffer);
+  return Array.isArray(result) ? result : [result];
 }
 
 function downloadBlobFile(filename: string, blob: Blob) {
@@ -37,31 +50,21 @@ export function downloadTextFile(
   downloadBlobFile(filename, new Blob([content], { type: mimeType }));
 }
 
-/**
- * Renders a DOM element (typically the Leaflet map container) to a PNG and
- * triggers a download. Note: raster basemap tiles that don't send CORS
- * headers (e.g. the default OpenStreetMap "Streets" tiles) may fail to
- * render into the canvas — CARTO (Dark/Terrain) and Esri (Satellite/Ocean)
- * tiles are more reliable for this.
- */
-export async function exportElementAsPng(
-  element: HTMLElement,
-  filename: string,
-) {
-  const { default: html2canvas } = await import("html2canvas");
+// export async function exportElementAsPng(
+//   element: HTMLElement,
+//   filename: string,
+// ) {
+//   const { default: html2canvas } = await import("html2canvas");
 
-  const canvas = await html2canvas(element, {
-    useCORS: true,
-    backgroundColor: null,
-  });
+//   const canvas = await html2canvas(element, {
+//     useCORS: true,
+//     backgroundColor: null,
+//   });
 
-  const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/png"),
-  );
+//   const blob: Blob | null = await new Promise((resolve) =>
+//     canvas.toBlob(resolve, "image/png"),
+//   );
+//   if (!blob) throw new Error("Failed to generate PNG.");
 
-  if (!blob) {
-    throw new Error("Failed to generate PNG.");
-  }
-
-  downloadBlobFile(filename, blob);
-}
+//   downloadBlobFile(filename, blob);
+// }
