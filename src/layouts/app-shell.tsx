@@ -3,7 +3,7 @@ import AppFooter from "../components/layout/app-footer";
 import AppHeader from "../components/layout/app-header";
 import AppSidebar from "../components/layout/app-sidebar";
 
-const FULL_BLEED_ROUTES = ["/geospatial-workspace"];
+const FULL_BLEED_ROUTES = ["/geospatial-workspace", "/particle-tracer"];
 
 export default function AppShell() {
   const location = useLocation();

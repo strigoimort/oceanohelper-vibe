@@ -4,6 +4,7 @@ import AppShell from "./layouts/app-shell";
 import DashboardPage from "./pages/dashboard-page";
 import PlaceholderPage from "./pages/placeholder-page";
 import GeospatialWorkspacePage from "./pages/geospatial-workspace-page";
+import ParticleTracerPage from "./pages/particle-tracer-page";
 
 import "./App.css";
 
@@ -33,15 +34,7 @@ function App() {
             path="geospatial-workspace"
             element={<GeospatialWorkspacePage />}
           />
-          <Route
-            path="particle-tracer"
-            element={
-              <PlaceholderPage
-                title="Particle Tracer"
-                description={toolDescriptions["particle-tracer"]}
-              />
-            }
-          />
+          <Route path="particle-tracer" element={<ParticleTracerPage />} />
           <Route
             path="wind-rose"
             element={

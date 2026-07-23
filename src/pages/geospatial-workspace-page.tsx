@@ -19,7 +19,7 @@ export default function GeospatialWorkspacePage() {
   );
   const [zoom, setZoom] = useState(2);
   const [map, setMap] = useState<L.Map | null>(null);
-  const [basemap, setBasemap] = useState<BasemapId>("streets");
+  const [basemap, setBasemap] = useState<BasemapId>("ocean");
 
   const {
     activeTool,
