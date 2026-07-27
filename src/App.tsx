@@ -5,6 +5,7 @@ import DashboardPage from "./pages/dashboard-page";
 import PlaceholderPage from "./pages/placeholder-page";
 import GeospatialWorkspacePage from "./pages/geospatial-workspace-page";
 import ParticleTracerPage from "./pages/particle-tracer-page";
+import WindRosePage from "./pages/wind-rose-page";
 
 import "./App.css";
 
@@ -35,15 +36,7 @@ function App() {
             element={<GeospatialWorkspacePage />}
           />
           <Route path="particle-tracer" element={<ParticleTracerPage />} />
-          <Route
-            path="wind-rose"
-            element={
-              <PlaceholderPage
-                title="Wind Rose"
-                description={toolDescriptions["wind-rose"]}
-              />
-            }
-          />
+          <Route path="wind-rose" element={<WindRosePage />} />
           <Route
             path="wave-analysis"
             element={
