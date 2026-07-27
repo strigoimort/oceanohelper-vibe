@@ -46,7 +46,7 @@ export default function ParticleForecastPanel({
         </button>
       </div>
 
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-1 text-xs text-slate-600">
         Projects the future position based on the last speed and direction of
         each particle (dead reckoning). Particles without speed/direction data
         will not be projected.

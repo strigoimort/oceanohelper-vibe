@@ -88,7 +88,7 @@ export default function ParticleImportDialog({
                   — halves the vertical footprint vs a single stacked list. */}
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <ColumnSelect
-                  label="Particle ID column"
+                  label="Particle ID"
                   headers={headers}
                   value={mapping.particleId}
                   onChange={(value) =>
@@ -96,7 +96,7 @@ export default function ParticleImportDialog({
                   }
                 />
                 <ColumnSelect
-                  label="Timestamp column"
+                  label="Timestamp"
                   headers={headers}
                   value={mapping.timestamp}
                   onChange={(value) =>
@@ -104,7 +104,7 @@ export default function ParticleImportDialog({
                   }
                 />
                 <ColumnSelect
-                  label="Latitude column"
+                  label="Latitude"
                   headers={headers}
                   value={mapping.lat}
                   onChange={(value) =>
@@ -112,7 +112,7 @@ export default function ParticleImportDialog({
                   }
                 />
                 <ColumnSelect
-                  label="Longitude column"
+                  label="Longitude"
                   headers={headers}
                   value={mapping.lng}
                   onChange={(value) =>
@@ -120,7 +120,7 @@ export default function ParticleImportDialog({
                   }
                 />
                 <ColumnSelect
-                  label="Speed column (optional)"
+                  label="Speed (optional)"
                   headers={headers}
                   value={mapping.speed}
                   onChange={(value) =>
@@ -129,7 +129,7 @@ export default function ParticleImportDialog({
                   allowEmpty
                 />
                 <ColumnSelect
-                  label="Direction column (optional)"
+                  label="Direction (optional)"
                   headers={headers}
                   value={mapping.direction}
                   onChange={(value) =>
@@ -145,15 +145,16 @@ export default function ParticleImportDialog({
 
               {missingFields.length > 0 && (
                 <p className="text-xs text-amber-600">
-                  Belum ada kolom untuk: {missingFields.join(", ")}. Pilih
-                  kolomnya secara manual di atas.
+                  No column found for: {missingFields.join(", ")}. Please select
+                  the corresponding column manually above.
                 </p>
               )}
 
               {missingFields.length === 0 && validCount === 0 && (
                 <p className="text-xs text-red-600">
-                  Kolom sudah terpetakan, tapi tidak ada baris yang valid. Cek
-                  isi Latitude/Longitude dan format Timestamp.
+                  The columns have been mapped, but no valid rows were found.
+                  Please check the Latitude/Longitude values and the Timestamp
+                  format.
                 </p>
               )}
             </div>

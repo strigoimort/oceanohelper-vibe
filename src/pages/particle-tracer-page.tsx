@@ -127,7 +127,7 @@ export default function ParticleTracerPage() {
         </div>
       </div>
 
-      <aside className="flex w-[320px] flex-col gap-4 overflow-y-auto border-l border-slate-200 bg-white p-4">
+      <aside className="flex w-[320px] flex-col gap-4 overflow-y-auto border-l border-slate-200 bg-white p-4 panel-scroll">
         <ParticleLayerPanel
           datasets={datasets}
           onToggleVisibility={toggleDatasetVisibility}

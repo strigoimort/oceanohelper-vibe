@@ -47,7 +47,7 @@ export default function ParticleInfoPanel({
         <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           Statistics
         </h2>
-        <dl className="mt-2 space-y-1 text-sm">
+        <dl className="mt-1 space-y-1 text-sm">
           <Row label="Total particles" value={stats.totalParticles} />
           <Row label="Active particles" value={stats.activeParticles} />
           <Row
@@ -65,7 +65,7 @@ export default function ParticleInfoPanel({
         </h2>
 
         {!selectedTrajectory || !currentPoint ? (
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-600">
             Click a particle marker on the map to inspect it.
           </p>
         ) : (
@@ -104,7 +104,7 @@ export default function ParticleInfoPanel({
 function Row({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex items-center justify-between">
-      <dt className="text-slate-500">{label}</dt>
+      <dt className="text-slate-600 ">{label}</dt>
       <dd className="font-medium text-slate-900">{value}</dd>
     </div>
   );

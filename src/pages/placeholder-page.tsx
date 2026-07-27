@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import GeospatialWorkspacePage from "./geospatial-workspace-page";
+import ParticleTracer from "./particle-tracer-page";
 
 type PlaceholderPageProps = {
   title: string;
@@ -15,6 +16,9 @@ export default function PlaceholderPage({
 }: PlaceholderPageProps) {
   if (title === "Geospatial Workspace") {
     return <GeospatialWorkspacePage />;
+  }
+  if (title === "Particle Tracer") {
+    return <ParticleTracer />;
   }
 
   return (

@@ -124,33 +124,24 @@ export default function GeospatialPropertiesPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-slate-200 pb-3">
-        <h1 className="text-lg font-semibold text-slate-900">
-          Workspace details
-        </h1>
-      </div>
-
-      {/* Scrolls as a whole only if total content exceeds panel height. */}
       <div className="flex min-h-0 flex-1 flex-col">
-        {/* Sized to its own content (up to max-h-64), not stretched to
-            fill leftover space — this is what caused the huge empty gap. */}
-        <section className="flex flex-1 min-h-0 flex-col py-3">
+        <section className="flex flex-1 min-h-0 flex-col pb-3">
           <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Layers ({layers.length})
           </h2>
 
           {layers.length === 0 ? (
-            <p className="mt-1 truncate text-sm text-slate-700">
+            <p className="mt-1 truncate text-sm text-slate-600">
               No layers created
             </p>
           ) : (
-            <div className="mt-1 flex-1 overflow-y-auto">
+            <div className="mt-1 flex-1 overflow-y-auto panel-scroll">
               <ul className="space-y-0.5">
                 {layers.map((layer) => (
                   <li key={layer.id}>
                     <div
                       onClick={() => onSelectLayer(layer.id)}
-                      className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left text-sm transition ${
+                      className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-left text-sm transition ${
                         layer.id === selectedLayerId
                           ? "bg-sky-50 text-sky-700"
                           : "text-slate-700 hover:bg-slate-50"
@@ -227,25 +218,51 @@ export default function GeospatialPropertiesPanel({
           <h2 className="text-[11px] border-t pt-2 border-slate-100 font-semibold uppercase tracking-wide text-slate-400">
             Measurements
           </h2>
-          <div className="mt-1 space-y-0.5">
-            {measurementRows.map((row, index) => (
-              <p key={index} className="h-5 truncate text-sm text-slate-700">
-                {row.label ? `${row.label} — ${row.value}` : row.value}
-              </p>
-            ))}
-          </div>
+          <dl className="mt-1 space-y-0.5 text-sm">
+            {measurementRows
+              .filter((row) => row.label || row.value)
+              .map((row, index) =>
+                row.label ? (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <dt className="text-slate-600">{row.label}</dt>
+                    <dd className="font-medium text-slate-900">{row.value}</dd>
+                  </div>
+                ) : (
+                  <p key={index} className="text-slate-600">
+                    {row.value}
+                  </p>
+                ),
+              )}
+          </dl>
         </section>
 
-        <section className="h-16 shrink-0 pt-2">
+        <section className="shrink-0 h-17 border-t border-slate-100 pt-2">
           <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Selected object
           </h2>
-          <p className="mt-1 h-5 truncate text-sm text-slate-700">
-            {selectedLayer ? selectedLayer.name : "None selected"}
-          </p>
-          <p className="h-4 truncate text-xs text-slate-400">
-            {selectedLayer ? `Type — ${selectedLayer.type}` : ""}
-          </p>
+
+          {!selectedLayer ? (
+            <p className="mt-1 text-sm text-slate-600">None selected</p>
+          ) : (
+            <dl className="mt-1 space-y-1 text-sm">
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-600">Name</dt>
+                <dd className="max-w-[60%] truncate text-right font-medium text-slate-900">
+                  {selectedLayer.name}
+                </dd>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <dt className="text-slate-600">Type</dt>
+                <dd className="font-medium capitalize text-slate-900">
+                  {selectedLayer.type}
+                </dd>
+              </div>
+            </dl>
+          )}
         </section>
       </div>
     </div>

@@ -20,13 +20,13 @@ export default function ParticleLayerPanel({
       </h2>
 
       {datasets.length === 0 ? (
-        <p className="mt-1 text-sm text-slate-500">No dataset imported</p>
+        <p className="mt-1 text-sm text-slate-600">No dataset imported</p>
       ) : (
         <ul className="mt-2 space-y-1">
           {datasets.map((dataset) => (
             <li
               key={dataset.id}
-              className="flex items-center justify-between gap-2 rounded-md px-1.5 py-1 text-sm text-slate-700 hover:bg-slate-50"
+              className="flex items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-sm text-slate-700 hover:bg-slate-50"
             >
               <span className="flex min-w-0 items-center gap-2">
                 <span
