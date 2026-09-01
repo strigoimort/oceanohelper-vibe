@@ -1,45 +1,25 @@
+import { ChevronDown } from "lucide-react";
+
 import { BEAUFORT_SCALE } from "../../../constants/wind-rose";
 
-type WindRoseBeaufortTableProps = {
-  mode: "wind" | "wave";
-};
+type WindRoseBeaufortTableProps = { mode: "wind" | "wave" };
 
-export default function WindRoseBeaufortTable({
-  mode,
-}: WindRoseBeaufortTableProps) {
+export default function WindRoseBeaufortTable({ mode }: WindRoseBeaufortTableProps) {
   if (mode !== "wind") return null;
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-semibold text-slate-900">
-        Beaufort Scale reference
-      </h3>
-      <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
-            <tr>
-              <th className="px-3 py-2">#</th>
-              <th className="px-3 py-2">Name</th>
-              <th className="px-3 py-2">Range (m/s)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {BEAUFORT_SCALE.map((entry) => (
-              <tr key={entry.number} className="border-t border-slate-100">
-                <td className="px-3 py-2 font-medium text-slate-900">
-                  {entry.number}
-                </td>
-                <td className="px-3 py-2">{entry.label}</td>
-                <td className="px-3 py-2">
-                  {entry.maxSpeed === Number.POSITIVE_INFINITY
-                    ? `≥ ${entry.minSpeed}`
-                    : `${entry.minSpeed}–${entry.maxSpeed}`}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  return <details className="group col-span-12 min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4 [&::-webkit-details-marker]:hidden">
+      <div>
+        <h3 className="text-base font-semibold text-slate-900">Beaufort Scale reference</h3>
+        <p className="text-xs text-slate-400">Mode: Wind · Unit: m/s</p>
       </div>
+      <ChevronDown size={16} className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180" />
+    </summary>
+    <div className="panel-scroll grid max-h-72 grid-cols-2 gap-2 overflow-y-auto border-t border-slate-100 p-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      {BEAUFORT_SCALE.map((entry) => <div key={entry.number} className="min-w-0 rounded-xl bg-slate-50 p-3">
+        <p className="truncate text-xs text-slate-400">{entry.number} · {entry.label}</p>
+        <p className="mt-1 text-sm font-medium text-slate-800">{entry.maxSpeed === Number.POSITIVE_INFINITY ? `≥ ${entry.minSpeed}` : `${entry.minSpeed}–${entry.maxSpeed}`}</p>
+      </div>)}
     </div>
-  );
+  </details>;
 }

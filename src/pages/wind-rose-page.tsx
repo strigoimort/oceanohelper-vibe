@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import WindRoseToolbar from "../features/wind-rose/components/wind-rose-toolbar";
 import WindRoseModeToggle from "../features/wind-rose/components/wind-rose-mode-toggle";
 import WindRoseChart from "../features/wind-rose/components/wind-rose-chart";
@@ -83,22 +81,16 @@ export default function WindRosePage() {
     }));
   };
 
-  const magnitudeLabel = useMemo(
-    () => (windRoseData.mode === "wind" ? "Speed (m/s)" : "Height (m)"),
-    [windRoseData.mode],
-  );
-
   return (
-    <div className="flex h-full w-full min-h-0 overflow-hidden bg-slate-50">
-      <div className="flex flex-1 min-h-0 flex-col gap-4 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+    <div className="w-full min-w-0 space-y-6">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
             <h2 className="text-3xl font-semibold text-slate-900">Wind Rose</h2>
             <p className="text-sm text-slate-600">
               Directional analysis for wind and wave observations.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
             <WindRoseModeToggle
               mode={windRoseData.mode}
               onChange={windRoseData.setMode}
@@ -112,19 +104,24 @@ export default function WindRosePage() {
           </div>
         </div>
 
-        <div className="grid flex-1 min-h-0 gap-4 xl:grid-cols-[1.4fr_0.6fr]">
-          <div className="flex min-h-0 flex-col gap-4">
-            <WindRoseChart analysis={analysis} mode={windRoseData.mode} />
-            <div className="grid grid-cols-2 gap-4">
-              <WindRoseStatisticsPanel
-                analysis={analysis}
-                mode={windRoseData.mode}
-              />
-              <WindRoseLegend analysis={analysis} mode={windRoseData.mode} />
-            </div>
+      <div className="grid min-w-0 grid-cols-12 items-start gap-6">
+        <section className="col-span-12 min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-7">
+          <div className="mb-4 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-base font-semibold text-slate-900">
+              {windRoseData.mode === "wind" ? "Wind rose" : "Wave rose"}
+            </h3>
+            <p className="text-xs text-slate-400">
+              {analysis.sectorCount} sectors · {analysis.breakpoints.length} magnitude classes
+            </p>
           </div>
+          <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center">
+            <WindRoseChart analysis={analysis} />
+            <WindRoseLegend analysis={analysis} mode={windRoseData.mode} />
+          </div>
+        </section>
 
-          <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+        <div className="col-span-12 flex min-w-0 flex-col gap-6 lg:col-span-5">
+            <WindRoseStatisticsPanel analysis={analysis} mode={windRoseData.mode} />
             <WindRoseFilterPanel
               mode={windRoseData.mode}
               filters={windRoseData.filters}
@@ -135,30 +132,9 @@ export default function WindRosePage() {
               onBreakpointsChange={handleBreakpointsChange}
               onReset={handleReset}
             />
-            <WindRoseBeaufortTable mode={windRoseData.mode} />
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-slate-900">
-                Current settings
-              </p>
-              <div className="mt-3 space-y-2 text-sm text-slate-600">
-                <div className="flex items-center justify-between">
-                  <span>Mode</span>
-                  <span className="font-medium text-slate-900">
-                    {windRoseData.mode === "wind" ? "Wind" : "Wave"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Magnitude unit</span>
-                  <span className="font-medium text-slate-900">
-                    {magnitudeLabel}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
+        <WindRoseBeaufortTable mode={windRoseData.mode} />
       </div>
-
       <WindRoseImportDialog
         isOpen={importDataset.isOpen}
         fileName={importDataset.fileName}

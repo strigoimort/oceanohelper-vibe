@@ -1,58 +1,25 @@
 import type { WindRoseAnalysis } from "../../../utils/wind-rose";
 
-type WindRoseStatisticsPanelProps = {
-  analysis: WindRoseAnalysis;
-  mode: "wind" | "wave";
-};
+type WindRoseStatisticsPanelProps = { analysis: WindRoseAnalysis; mode: "wind" | "wave" };
 
-export default function WindRoseStatisticsPanel({
-  analysis,
-  mode,
-}: WindRoseStatisticsPanelProps) {
+export default function WindRoseStatisticsPanel({ analysis, mode }: WindRoseStatisticsPanelProps) {
   const magnitudeLabel = mode === "wind" ? "Mean speed" : "Mean height";
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-semibold text-slate-900">
-        Summary statistics
-      </h3>
-      <div className="mt-4 space-y-3 text-sm text-slate-600">
-        <div className="flex items-center justify-between">
-          <span>Observations</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.observationCount}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Dominant direction</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.dominantDirection?.toFixed(1) ?? "—"}°
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Mean direction</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.meanDirection.toFixed(1)}°
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>{magnitudeLabel}</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.meanMagnitude.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Min</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.minMagnitude?.toFixed(2) ?? "—"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>Max</span>
-          <span className="font-semibold text-slate-900">
-            {analysis.stats.maxMagnitude?.toFixed(2) ?? "—"}
-          </span>
-        </div>
-      </div>
+  const metrics = [
+    ["Observations", analysis.stats.observationCount],
+    ["Dominant dir.", `${analysis.stats.dominantDirection?.toFixed(1) ?? "—"}°`],
+    ["Mean dir.", `${analysis.stats.meanDirection.toFixed(1)}°`],
+    [magnitudeLabel, analysis.stats.meanMagnitude.toFixed(2)],
+    ["Min", analysis.stats.minMagnitude?.toFixed(2) ?? "—"],
+    ["Max", analysis.stats.maxMagnitude?.toFixed(2) ?? "—"],
+  ];
+
+  return <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h3 className="text-base font-semibold text-slate-900">Summary statistics</h3>
+    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {metrics.map(([label, value]) => <div key={label} className="min-w-0 rounded-xl bg-slate-50 p-3">
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className="mt-1 truncate text-lg font-semibold text-slate-900">{value}</p>
+      </div>)}
     </div>
-  );
+  </section>;
 }

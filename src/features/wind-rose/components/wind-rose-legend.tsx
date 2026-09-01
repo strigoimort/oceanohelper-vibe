@@ -1,43 +1,17 @@
 import type { WindRoseAnalysis } from "../../../utils/wind-rose";
 
-type WindRoseLegendProps = {
-  analysis: WindRoseAnalysis;
-  mode: "wind" | "wave";
-};
+type WindRoseLegendProps = { analysis: WindRoseAnalysis; mode: "wind" | "wave" };
 
-const COLORS = ["#0f766e", "#0ea5e9", "#6366f1", "#f59e0b", "#ef4444"];
+const COLORS = ["#38bdf8", "#0ea5e9", "#14b8a6", "#f59e0b", "#f97316", "#ef4444"];
 
-export default function WindRoseLegend({
-  analysis,
-  mode,
-}: WindRoseLegendProps) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-      <h4 className="text-sm font-semibold text-slate-900">
-        {mode === "wind" ? "Wind speed classes" : "Wave height classes"}
-      </h4>
-      <div className="mt-3 space-y-2">
-        {analysis.classLabels.map((label, index) => (
-          <div
-            key={`${label}-${index}`}
-            className="flex items-center justify-between text-sm text-slate-600"
-          >
-            <span className="flex items-center gap-2">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: COLORS[index % COLORS.length] }}
-              />
-              {label}
-            </span>
-            <span>
-              {analysis.sectors.reduce(
-                (total, sector) => total + sector.classes[index].count,
-                0,
-              )}
-            </span>
-          </div>
-        ))}
-      </div>
+export default function WindRoseLegend({ analysis, mode }: WindRoseLegendProps) {
+  return <div className="w-full min-w-0 lg:w-44 lg:shrink-0">
+    <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{mode === "wind" ? "Speed class (m/s)" : "Height class (m)"}</h4>
+    <div className="mt-3 space-y-1.5">
+      {analysis.classLabels.map((label, index) => <div key={`${label}-${index}`} className="flex min-w-0 items-center gap-2 text-sm text-slate-600">
+        <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+        <span className="truncate">{label}</span>
+      </div>)}
     </div>
-  );
+  </div>;
 }

@@ -14,7 +14,7 @@ export default function WindRoseToolbar({
   hasData,
 }: WindRoseToolbarProps) {
   return (
-    <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
+    <div className="flex max-w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur">
       <button
         type="button"
         onClick={onImportClick}

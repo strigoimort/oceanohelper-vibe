@@ -1,109 +1,53 @@
 import type { WindRoseAnalysis } from "../../../utils/wind-rose";
 
-type WindRoseChartProps = {
-  analysis: WindRoseAnalysis;
-  mode: "wind" | "wave";
-};
+type WindRoseChartProps = { analysis: WindRoseAnalysis };
 
-const COLORS = ["#0f766e", "#0ea5e9", "#6366f1", "#f59e0b", "#ef4444"];
+const COLORS = ["#38bdf8", "#0ea5e9", "#14b8a6", "#f59e0b", "#f97316", "#ef4444"];
 
-export default function WindRoseChart({ analysis, mode }: WindRoseChartProps) {
-  const size = 360;
+function polarPoint(center: number, radius: number, angle: number) {
+  const radians = ((angle - 90) * Math.PI) / 180;
+  return { x: center + radius * Math.cos(radians), y: center + radius * Math.sin(radians) };
+}
+
+function annularSectorPath(center: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number) {
+  const startInner = polarPoint(center, innerRadius, startAngle);
+  const startOuter = polarPoint(center, outerRadius, startAngle);
+  const endOuter = polarPoint(center, outerRadius, endAngle);
+  const endInner = polarPoint(center, innerRadius, endAngle);
+  return [`M ${startInner.x} ${startInner.y}`, `L ${startOuter.x} ${startOuter.y}`, `A ${outerRadius} ${outerRadius} 0 0 1 ${endOuter.x} ${endOuter.y}`, `L ${endInner.x} ${endInner.y}`, `A ${innerRadius} ${innerRadius} 0 0 0 ${startInner.x} ${startInner.y}`, "Z"].join(" ");
+}
+
+export default function WindRoseChart({ analysis }: WindRoseChartProps) {
+  const size = 400;
   const center = size / 2;
-  const maxRadius = size * 0.36;
-
-  const total = analysis.records.length || 1;
+  const innerRadius = 20;
+  const maxRadius = 165;
+  const sectorAngle = 360 / analysis.sectorCount;
+  const maxSectorCount = Math.max(...analysis.sectors.map((sector) => sector.count), 1);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-slate-900">
-            {mode === "wind" ? "Wind Rose" : "Wave Rose"}
-          </h3>
-          <p className="text-sm text-slate-500">
-            {analysis.sectorCount} sectors • {analysis.breakpoints.length}{" "}
-            magnitude classes
-          </p>
-        </div>
-      </div>
-
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="w-full max-w-[640px] rounded-xl bg-slate-50 p-3"
-      >
-        <circle
-          cx={center}
-          cy={center}
-          r={maxRadius}
-          fill="none"
-          stroke="#cbd5e1"
-          strokeWidth="1"
-        />
-        {Array.from({ length: 4 }, (_, index) => {
-          const radius = (maxRadius / 4) * (index + 1);
-          return (
-            <circle
-              key={index}
-              cx={center}
-              cy={center}
-              r={radius}
-              fill="none"
-              stroke="#e2e8f0"
-              strokeWidth="1"
-            />
-          );
-        })}
-
+    <div className="min-w-0 flex-1">
+      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="mx-auto block h-auto w-full max-w-[420px]" aria-label="Wind rose chart" role="img">
+        {[0.25, 0.5, 0.75, 1].map((fraction) => <circle key={fraction} cx={center} cy={center} r={innerRadius + fraction * (maxRadius - innerRadius)} fill="none" stroke="#e2e8f0" />)}
         {analysis.sectors.map((sector, index) => {
-          const angle =
-            (index / analysis.sectorCount) * Math.PI * 2 - Math.PI / 2;
-          const x = center + Math.cos(angle) * maxRadius;
-          const y = center + Math.sin(angle) * maxRadius;
-          const radius = maxRadius * (sector.count / total);
-          const points = [
-            `${center},${center}`,
-            `${center + Math.cos(angle) * radius},${center + Math.sin(angle) * radius}`,
-            `${center + Math.cos(angle + (Math.PI * 2) / analysis.sectorCount) * radius},${center + Math.sin(angle + (Math.PI * 2) / analysis.sectorCount) * radius}`,
-          ].join(" ");
-
-          return (
-            <g key={sector.sectorIndex}>
-              <polygon
-                points={points}
-                fill={COLORS[index % COLORS.length]}
-                fillOpacity={0.35}
-                stroke="#0f172a"
-                strokeWidth="0.6"
-              />
-              <line
-                x1={center}
-                y1={center}
-                x2={x}
-                y2={y}
-                stroke="#94a3b8"
-                strokeWidth="1"
-              />
-              <text
-                x={
-                  center +
-                  Math.cos(angle + (Math.PI * 2) / (analysis.sectorCount * 2)) *
-                    (maxRadius + 18)
-                }
-                y={
-                  center +
-                  Math.sin(angle + (Math.PI * 2) / (analysis.sectorCount * 2)) *
-                    (maxRadius + 18)
-                }
-                textAnchor="middle"
-                fontSize="10"
-                fill="#64748b"
-              >
-                {sector.count}
-              </text>
-            </g>
-          );
+          const angle = index * sectorAngle;
+          const spokeEnd = polarPoint(center, maxRadius, angle);
+          const labelPoint = polarPoint(center, maxRadius + 15, angle);
+          let radiusCursor = innerRadius;
+          const startAngle = angle - sectorAngle / 2 + 1;
+          const endAngle = angle + sectorAngle / 2 - 1;
+          return <g key={sector.sectorIndex}>
+            <line x1={center} y1={center} x2={spokeEnd.x} y2={spokeEnd.y} stroke="#e2e8f0" />
+            {sector.classes.map((windClass, classIndex) => {
+              const nextRadius = radiusCursor + (windClass.count / maxSectorCount) * (maxRadius - innerRadius);
+              const path = annularSectorPath(center, radiusCursor, nextRadius, startAngle, endAngle);
+              radiusCursor = nextRadius;
+              return windClass.count > 0 ? <path key={classIndex} d={path} fill={COLORS[classIndex % COLORS.length]} /> : null;
+            })}
+            <text x={labelPoint.x} y={labelPoint.y} dominantBaseline="middle" fill="#94a3b8" fontSize="10" textAnchor="middle">{Math.round(angle)}°</text>
+          </g>;
         })}
+        <circle cx={center} cy={center} r={innerRadius} fill="#fff" />
       </svg>
     </div>
   );
