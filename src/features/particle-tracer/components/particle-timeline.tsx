@@ -107,18 +107,27 @@ export default function ParticleTimeline({
         {label}
       </span>
 
-      <select
-        value={speed}
-        disabled={disabled}
-        onChange={(e) => onSpeedChange(Number(e.target.value))}
-        className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-700 disabled:opacity-40"
+      <div
+        className="flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-0.5"
+        role="group"
+        aria-label="Playback speed"
       >
         {PLAYBACK_SPEED_OPTIONS.map((option) => (
-          <option key={option} value={option}>
+          <button
+            key={option}
+            type="button"
+            disabled={disabled}
+            onClick={() => onSpeedChange(option)}
+            className={`rounded-md px-2 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
+              option === speed
+                ? "bg-sky-600 text-white"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
             {option}x
-          </option>
+          </button>
         ))}
-      </select>
+      </div>
     </div>
   );
 }

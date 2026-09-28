@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 
 import type { DrawnLayer } from "../hooks/use-drawing-tools";
 import {
@@ -10,8 +10,6 @@ import {
 
 type MeasurementRow = { label: string; value: string };
 
-// Always returns exactly 2 rows, regardless of the selected geometry type,
-// so the Measurements block never changes height.
 function getMeasurementRows(
   layer: DrawnLayer | null,
 ): [MeasurementRow, MeasurementRow] {
@@ -141,7 +139,7 @@ export default function GeospatialPropertiesPanel({
                   <li key={layer.id}>
                     <div
                       onClick={() => onSelectLayer(layer.id)}
-                      className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-left text-sm transition ${
+                      className={`group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-left text-sm transition ${
                         layer.id === selectedLayerId
                           ? "bg-sky-50 text-sky-700"
                           : "text-slate-700 hover:bg-slate-50"
@@ -179,6 +177,19 @@ export default function GeospatialPropertiesPanel({
                       </span>
 
                       <span className="flex shrink-0 items-center gap-1">
+                        {editingId !== layer.id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startRename(layer);
+                            }}
+                            className="text-slate-300 opacity-0 transition hover:text-slate-700 group-hover:opacity-100"
+                            title="Rename layer"
+                          >
+                            <Pencil size={13} />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {
