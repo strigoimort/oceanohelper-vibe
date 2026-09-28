@@ -12,11 +12,10 @@ import WindRoseFilterPanel from "../features/wind-rose/components/wind-rose-filt
 import WindRoseSettingsPanel from "../features/wind-rose/components/wind-rose-settings-panel";
 import WindRoseImportDialog from "../features/wind-rose/components/wind-rose-import-dialog";
 import { useWindRoseImport } from "../features/wind-rose/hooks/use-wind-rose-import";
+import { useWindRoseExport } from "../features/wind-rose/hooks/use-wind-rose-export";
 import { useWindRoseData } from "../features/wind-rose/hooks/use-wind-rose-data";
 import { useWindRoseBins } from "../features/wind-rose/hooks/use-wind-rose-bins";
-import { downloadTextFile } from "../services/file-service";
 import { hasActiveFilters } from "../utils/wind-rose";
-import { buildWindRoseSvgMarkup } from "../utils/wind-rose-geometry";
 
 export default function WindRosePage() {
   const windRoseData = useWindRoseData("wind");
@@ -32,6 +31,8 @@ export default function WindRosePage() {
     filters,
   });
 
+  const exporter = useWindRoseExport(analysis, mode);
+
   const isWind = mode === "wind";
   const hasData = records.length > 0;
   const hasResults = analysis.records.length > 0;
@@ -43,28 +44,6 @@ export default function WindRosePage() {
   const handleImportConfirm = () => {
     windRoseData.setRecords(importDataset.validRecords);
     importDataset.reset();
-  };
-
-  const handleExportCsv = () => {
-    const rows: (string | number)[][] = [
-      ["metric", "value"],
-      ["observations", analysis.stats.observationCount],
-      ["dominant_direction", analysis.stats.dominantDirection ?? ""],
-      ["mean_direction", analysis.stats.meanDirection],
-      ["mean_magnitude", analysis.stats.meanMagnitude],
-      ["min_magnitude", analysis.stats.minMagnitude ?? ""],
-      ["max_magnitude", analysis.stats.maxMagnitude ?? ""],
-    ];
-    const csv = rows.map((row) => row.join(",")).join("\n");
-    downloadTextFile(`wind-rose-summary-${Date.now()}.csv`, csv, "text/csv");
-  };
-
-  const handleExportSvg = () => {
-    downloadTextFile(
-      `wind-rose-${mode}-${Date.now()}.svg`,
-      buildWindRoseSvgMarkup(analysis, mode),
-      "image/svg+xml",
-    );
   };
 
   return (
@@ -83,19 +62,27 @@ export default function WindRosePage() {
           <WindRoseModeToggle mode={mode} onChange={windRoseData.setMode} />
           <WindRoseToolbar
             onImportClick={importDataset.open}
-            onExportCsv={handleExportCsv}
-            onExportSvg={handleExportSvg}
+            onExport={exporter.exportAs}
             hasData={hasResults}
           />
         </div>
       </header>
+
+      {exporter.error && (
+        <p
+          role="alert"
+          className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700"
+        >
+          {exporter.error}
+        </p>
+      )}
 
       {!hasData ? (
         <Card padded={false}>
           <EmptyState
             icon={isWind ? <Wind size={22} /> : <Waves size={22} />}
             title="No dataset imported"
-            description={`Import a CSV file with a direction column (degrees) and a ${
+            description={`Import a CSV or Excel (.xlsx) file with a direction column (degrees) and a ${
               isWind ? "wind speed (m/s)" : "wave height (m)"
             } column to generate the rose diagram.`}
             action={
@@ -105,7 +92,7 @@ export default function WindRosePage() {
                 className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover"
               >
                 <Upload size={16} />
-                Import CSV
+                Import dataset
               </button>
             }
           />
@@ -162,7 +149,10 @@ export default function WindRosePage() {
             />
           </div>
 
-          <WindRoseBeaufortTable mode={mode} />
+          <WindRoseBeaufortTable
+            mode={mode}
+            activeNumber={analysis.beaufortClass?.number ?? null}
+          />
         </div>
       )}
 

@@ -1,6 +1,9 @@
 import { useCallback, useState } from "react";
 
-import { parseCsvFile } from "../../../services/file-service";
+import {
+  isTabularFile,
+  parseTabularFile,
+} from "../../../services/file-service";
 import {
   detectWindRoseColumnMapping,
   type WindRoseColumnMapping,
@@ -43,14 +46,16 @@ export function useWindRoseImport() {
 
   const loadFile = useCallback(async (file: File) => {
     setError(null);
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Unsupported file type. Use a CSV file.");
+
+    if (!isTabularFile(file)) {
+      setError("Unsupported file type. Use a CSV or Excel (.xlsx) file.");
       return;
     }
 
     try {
       const { headers: parsedHeaders, rows: parsedRows } =
-        await parseCsvFile(file);
+        await parseTabularFile(file);
+
       if (parsedRows.length === 0) {
         setError("The file doesn't contain any rows.");
         return;
@@ -61,7 +66,7 @@ export function useWindRoseImport() {
       setRows(parsedRows);
       setMapping(detectWindRoseColumnMapping(parsedHeaders));
     } catch {
-      setError("Failed to read the CSV file. Please check the format.");
+      setError("Failed to read the file. Please check the format.");
     }
   }, []);
 

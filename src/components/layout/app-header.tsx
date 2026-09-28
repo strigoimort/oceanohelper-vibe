@@ -57,7 +57,7 @@ export default function AppHeader() {
           <div className="text-right">
             <div className="flex items-center justify-end gap-2 text-sm font-medium text-slate-700">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              Ready
+              Online
             </div>
 
             <p className="text-xs text-slate-500">

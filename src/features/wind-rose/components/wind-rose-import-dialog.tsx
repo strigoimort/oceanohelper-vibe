@@ -1,6 +1,7 @@
 import { Upload, X } from "lucide-react";
 import type { ChangeEvent } from "react";
 
+import { TABULAR_FILE_EXTENSIONS } from "../../../constants/files";
 import type { WindRoseColumnMapping } from "../hooks/use-wind-rose-import";
 
 type WindRoseImportDialogProps = {
@@ -38,6 +39,7 @@ export default function WindRoseImportDialog({
   };
 
   const canConfirm = validCount > 0;
+  const isExcel = fileName?.toLowerCase().endsWith(".xlsx") ?? false;
   const missingFields = [
     !mapping.direction && "Direction",
     !mapping.magnitude && "Magnitude",
@@ -64,20 +66,29 @@ export default function WindRoseImportDialog({
             <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 text-sm text-slate-500 hover:border-accent/40 hover:text-accent">
               <Upload size={22} />
               Click to select a file
-              <span className="text-xs text-slate-400">CSV file</span>
+              <span className="text-xs text-slate-400">
+                CSV or Excel (.xlsx)
+              </span>
               <input
                 type="file"
-                accept=".csv"
+                accept={TABULAR_FILE_EXTENSIONS.join(",")}
                 className="hidden"
                 onChange={handleFileInput}
               />
             </label>
           ) : (
             <div className="space-y-4">
-              <p className="truncate text-sm text-slate-600">
-                <span className="font-medium text-slate-900">{fileName}</span> —{" "}
-                {rowCount} rows
-              </p>
+              <div>
+                <p className="truncate text-sm text-slate-600">
+                  <span className="font-medium text-slate-900">{fileName}</span>{" "}
+                  — {rowCount} rows
+                </p>
+                {isExcel && (
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    The first worksheet that contains data is used.
+                  </p>
+                )}
+              </div>
 
               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <ColumnSelect

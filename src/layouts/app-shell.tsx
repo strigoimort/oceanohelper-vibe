@@ -18,11 +18,13 @@ export default function AppShell() {
         <AppSidebar />
 
         <main
-          className={`flex flex-1 overflow-y-auto ${
-            isFullBleed ? "bg-white" : "bg-canvas p-8"
+          className={`flex-1 overflow-y-auto ${
+            isFullBleed ? "bg-white" : "bg-canvas"
           }`}
         >
-          <Outlet />
+          <div className={isFullBleed ? "h-full" : "px-8 pt-8 pb-12"}>
+            <Outlet />
+          </div>
         </main>
       </div>
 

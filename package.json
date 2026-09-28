@@ -19,7 +19,8 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.1",
     "shpjs": "^6.2.0",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

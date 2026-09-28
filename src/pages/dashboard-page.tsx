@@ -8,12 +8,12 @@ export default function DashboardPage() {
 
   return (
     <div className="w-full space-y-8">
-      <section className="border-b border-slate-200 pb-8">
+      <section>
         <h2 className="text-4xl font-semibold tracking-tight text-ink">
           Marine Data Workspace
         </h2>
 
-        <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
+        <p className="mt-4 max-w-5xl text-lg leading-8 text-slate-600">
           Integrated tools for geospatial visualization, marine forecasting,
           wave analysis, climatology, and oceanographic data processing.
         </p>

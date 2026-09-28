@@ -5,7 +5,8 @@
     -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter",
     system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --color-canvas: #f5f5f7;
+  /* --color-canvas: #f5f5f7; */
+  --color-canvas: #ffffff;
   --color-surface: #ffffff;
   --color-ink: #1d1d1f;
   --color-accent: #0071e3;
