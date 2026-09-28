@@ -1,72 +1,163 @@
-import { ChevronDown } from "lucide-react";
+import type { ReactNode } from "react";
 
-import type { WindRoseFilters } from "../../../utils/wind-rose";
-import { DEFAULT_SECTOR_COUNT, SECTOR_OPTIONS, type WindRoseMode } from "../../../constants/wind-rose";
+import Card from "../../../components/ui/card";
+import type { WindRoseMode } from "../../../constants/wind-rose";
+import {
+  hasActiveFilters,
+  type WindRoseFilters,
+} from "../../../utils/wind-rose";
 
 type WindRoseFilterPanelProps = {
   mode: WindRoseMode;
   filters: WindRoseFilters;
-  sectorCount: number;
-  breakpoints: number[];
   onFiltersChange: (filters: WindRoseFilters) => void;
-  onSectorCountChange: (sectorCount: number) => void;
-  onBreakpointsChange: (breakpoints: number[]) => void;
   onReset: () => void;
 };
 
-export default function WindRoseFilterPanel({ mode, filters, sectorCount, breakpoints, onFiltersChange, onSectorCountChange, onBreakpointsChange, onReset }: WindRoseFilterPanelProps) {
-  const handleBreakpointChange = (index: number, value: string) => {
-    const nextBreakpoints = [...breakpoints];
-    nextBreakpoints[index] = Number(value);
-    onBreakpointsChange(nextBreakpoints.filter((point) => Number.isFinite(point) && point >= 0).sort((left, right) => left - right));
-  };
+const INPUT_CLASS =
+  "mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-accent focus:outline-none";
 
-  const updateRange = (field: "magnitudeRange" | "directionRange", value: string) => {
-    const [lower, upper] = value.split(",");
-    onFiltersChange({ ...filters, [field]: [Number(lower), Number(upper)] });
-  };
+export default function WindRoseFilterPanel({
+  mode,
+  filters,
+  onFiltersChange,
+  onReset,
+}: WindRoseFilterPanelProps) {
+  const update = (patch: Partial<WindRoseFilters>) =>
+    onFiltersChange({ ...filters, ...patch });
 
-  return <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
-      <h3 className="text-base font-semibold text-slate-900">Filters &amp; settings</h3>
-      <button type="button" onClick={onReset} className="text-xs font-medium text-sky-600 hover:text-sky-700">Reset</button>
-    </div>
-
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <label className="block min-w-0 text-xs font-medium text-slate-500">Date from
-        <input type="date" value={filters.dateFrom ?? ""} onChange={(event) => onFiltersChange({ ...filters, dateFrom: event.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none" />
-      </label>
-      <label className="block min-w-0 text-xs font-medium text-slate-500">Date to
-        <input type="date" value={filters.dateTo ?? ""} onChange={(event) => onFiltersChange({ ...filters, dateTo: event.target.value || null })} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none" />
-      </label>
-      <label className="block min-w-0 text-xs font-medium text-slate-500">{mode === "wind" ? "Speed range (m/s)" : "Height range (m)"}
-        <input type="text" value={`${filters.magnitudeRange[0]},${filters.magnitudeRange[1]}`} onChange={(event) => updateRange("magnitudeRange", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none" />
-      </label>
-      <label className="block min-w-0 text-xs font-medium text-slate-500">Direction range (°)
-        <input type="text" value={`${filters.directionRange[0]},${filters.directionRange[1]}`} onChange={(event) => updateRange("directionRange", event.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none" />
-      </label>
-      <label className="block min-w-0 text-xs font-medium text-slate-500 sm:col-span-2">Direction sectors
-        <select value={sectorCount} onChange={(event) => onSectorCountChange(Number(event.target.value))} className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none">
-          {[DEFAULT_SECTOR_COUNT, ...SECTOR_OPTIONS.filter((option) => option !== DEFAULT_SECTOR_COUNT)].map((option) => <option key={option} value={option}>{option}</option>)}
-          <option value="custom">Custom</option>
-        </select>
-      </label>
-    </div>
-
-    <details className="group mt-4 rounded-xl border border-slate-200">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 [&::-webkit-details-marker]:hidden">
-        <span>Edit magnitude breakpoints</span>
-        <ChevronDown size={16} className="shrink-0 text-slate-400 transition-transform duration-200 group-open:rotate-180" />
-      </summary>
-      <div className="border-t border-slate-100">
-        <div className="panel-scroll mt-2 max-h-72 overflow-y-auto px-3 py-1 pr-1">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {breakpoints.map((breakpoint, index) => <label key={`${breakpoint}-${index}`} className="min-w-0 text-[11px] text-slate-400">Class {index + 1}
-              <input type="number" value={breakpoint} onChange={(event) => handleBreakpointChange(index, event.target.value)} className="mt-1 w-full rounded-lg bg-slate-50 px-2 py-1.5 text-center text-sm text-slate-700 outline-none ring-1 ring-inset ring-slate-200 focus:ring-sky-500" />
-            </label>)}
-          </div>
-        </div>
+  return (
+    <Card>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-ink">Filters</h3>
+        <button
+          type="button"
+          onClick={onReset}
+          disabled={!hasActiveFilters(filters)}
+          className="text-xs font-medium text-accent hover:text-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Reset
+        </button>
       </div>
-    </details>
-  </section>;
+
+      <div className="space-y-4">
+        <FieldGroup title="Date range">
+          <DateField
+            label="From"
+            value={filters.dateFrom}
+            onChange={(value) => update({ dateFrom: value })}
+          />
+          <DateField
+            label="To"
+            value={filters.dateTo}
+            onChange={(value) => update({ dateTo: value })}
+          />
+        </FieldGroup>
+
+        <FieldGroup title={mode === "wind" ? "Speed (m/s)" : "Height (m)"}>
+          <NumberField
+            label="Min"
+            min={0}
+            value={filters.magnitudeMin}
+            onChange={(value) => update({ magnitudeMin: value })}
+          />
+          <NumberField
+            label="Max"
+            min={0}
+            value={filters.magnitudeMax}
+            onChange={(value) => update({ magnitudeMax: value })}
+          />
+        </FieldGroup>
+
+        <FieldGroup
+          title="Direction (°)"
+          hint="Set From higher than To to wrap through north, e.g. 315 → 45."
+        >
+          <NumberField
+            label="From"
+            min={0}
+            max={360}
+            value={filters.directionFrom}
+            onChange={(value) => update({ directionFrom: value })}
+          />
+          <NumberField
+            label="To"
+            min={0}
+            max={360}
+            value={filters.directionTo}
+            onChange={(value) => update({ directionTo: value })}
+          />
+        </FieldGroup>
+      </div>
+    </Card>
+  );
+}
+
+type FieldGroupProps = {
+  title: string;
+  hint?: string;
+  children: ReactNode;
+};
+
+function FieldGroup({ title, hint, children }: FieldGroupProps) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {title}
+      </p>
+      <div className="grid grid-cols-2 gap-3">{children}</div>
+      {hint && <p className="mt-1.5 text-xs text-slate-400">{hint}</p>}
+    </div>
+  );
+}
+
+type DateFieldProps = {
+  label: string;
+  value: string | null;
+  onChange: (value: string | null) => void;
+};
+
+function DateField({ label, value, onChange }: DateFieldProps) {
+  return (
+    <label className="block min-w-0 text-xs font-medium text-slate-500">
+      {label}
+      <input
+        type="date"
+        value={value ?? ""}
+        onChange={(event) => onChange(event.target.value || null)}
+        className={INPUT_CLASS}
+      />
+    </label>
+  );
+}
+
+type NumberFieldProps = {
+  label: string;
+  value: number | null;
+  min?: number;
+  max?: number;
+  onChange: (value: number | null) => void;
+};
+
+function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
+  return (
+    <label className="block min-w-0 text-xs font-medium text-slate-500">
+      {label}
+      <input
+        type="number"
+        inputMode="decimal"
+        step="any"
+        min={min}
+        max={max}
+        value={value ?? ""}
+        placeholder="Any"
+        onChange={(event) =>
+          onChange(
+            event.target.value === "" ? null : Number(event.target.value),
+          )
+        }
+        className={INPUT_CLASS}
+      />
+    </label>
+  );
 }

@@ -61,7 +61,7 @@ export default function WindRoseImportDialog({
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {!fileName ? (
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 text-sm text-slate-500 hover:border-sky-300 hover:text-sky-600">
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 text-sm text-slate-500 hover:border-accent/40 hover:text-accent">
               <Upload size={22} />
               Click to select a file
               <span className="text-xs text-slate-400">CSV file</span>
@@ -135,7 +135,7 @@ export default function WindRoseImportDialog({
             type="button"
             disabled={!canConfirm}
             onClick={onConfirm}
-            className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
           >
             Import
           </button>
@@ -166,7 +166,7 @@ function ColumnSelect({
       <select
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value || null)}
-        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none"
+        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-accent focus:outline-none"
       >
         {allowEmpty && <option value="">— None —</option>}
         {!allowEmpty && !value && <option value="">Select column…</option>}

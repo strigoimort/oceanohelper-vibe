@@ -16,7 +16,7 @@ export default function WindRoseModeToggle({
       <button
         type="button"
         onClick={() => onChange("wind")}
-        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === "wind" ? "bg-sky-600 text-white" : "text-slate-500 hover:text-slate-900"}`}
+        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === "wind" ? "bg-accent text-white" : "text-slate-500 hover:text-slate-900"}`}
       >
         <Wind size={16} />
         Wind
@@ -24,7 +24,7 @@ export default function WindRoseModeToggle({
       <button
         type="button"
         onClick={() => onChange("wave")}
-        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === "wave" ? "bg-sky-600 text-white" : "text-slate-500 hover:text-slate-900"}`}
+        className={`inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition ${mode === "wave" ? "bg-accent text-white" : "text-slate-500 hover:text-slate-900"}`}
       >
         <Waves size={16} />
         Wave

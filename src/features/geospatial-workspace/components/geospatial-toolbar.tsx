@@ -67,9 +67,9 @@ export default function GeospatialToolbar({
                 type="button"
                 title={tool.name}
                 onClick={() => onToolChange(tool.id)}
-                className={`flex h-10 w-10 items-center justify-center rounded-2xl border transition focus:outline-none focus:ring-2 focus:ring-sky-200 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-2xl border transition focus:outline-none focus:ring-2 focus:ring-accent/30 ${
                   isActive
-                    ? "border-sky-200 bg-sky-100 text-sky-700"
+                    ? "border-accent/20 bg-accent-soft text-accent"
                     : "border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >

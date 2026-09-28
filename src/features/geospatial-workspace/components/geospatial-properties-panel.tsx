@@ -141,7 +141,7 @@ export default function GeospatialPropertiesPanel({
                       onClick={() => onSelectLayer(layer.id)}
                       className={`group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-1.5 py-0.5 text-left text-sm transition ${
                         layer.id === selectedLayerId
-                          ? "bg-sky-50 text-sky-700"
+                          ? "bg-accent-soft text-accent"
                           : "text-slate-700 hover:bg-slate-50"
                       }`}
                     >
@@ -161,7 +161,7 @@ export default function GeospatialPropertiesPanel({
                               if (e.key === "Escape") setEditingId(null);
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full rounded border border-sky-300 px-1 text-sm outline-none"
+                            className="w-full rounded border border-accent/40 px-1 text-sm outline-none"
                           />
                         ) : (
                           <span

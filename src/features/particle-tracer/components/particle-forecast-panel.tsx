@@ -79,7 +79,7 @@ export default function ParticleForecastPanel({
                 durationHours: value,
               });
             }}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800 focus:border-sky-500 focus:outline-none disabled:opacity-40"
+            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800 focus:border-accent focus:outline-none disabled:opacity-40"
           />
         </label>
 
@@ -109,7 +109,7 @@ export default function ParticleForecastPanel({
                 intervalHours: value,
               });
             }}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800 focus:border-sky-500 focus:outline-none disabled:opacity-40"
+            className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-800 focus:border-accent focus:outline-none disabled:opacity-40"
           />
         </label>
       </div>

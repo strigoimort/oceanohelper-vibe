@@ -1,53 +1,143 @@
-import type { WindRoseAnalysis } from "../../../utils/wind-rose";
+import type { WindRoseMode } from "../../../constants/wind-rose";
+import {
+  getWindRoseClassColor,
+  type WindRoseAnalysis,
+} from "../../../utils/wind-rose";
+import {
+  CHART_CENTER,
+  CHART_SIZE,
+  COMPASS_LABELS,
+  INNER_RADIUS,
+  MAX_RADIUS,
+  RING_FRACTIONS,
+  annularSectorPath,
+  describeSegment,
+  formatRingPercent,
+  getMaxSectorCount,
+  getMaxSectorPercent,
+  getRingRadius,
+  getSectorAngles,
+  getStackSegments,
+  polarPoint,
+} from "../../../utils/wind-rose-geometry";
 
-type WindRoseChartProps = { analysis: WindRoseAnalysis };
+type WindRoseChartProps = {
+  analysis: WindRoseAnalysis;
+  mode: WindRoseMode;
+};
 
-const COLORS = ["#38bdf8", "#0ea5e9", "#14b8a6", "#f59e0b", "#f97316", "#ef4444"];
-
-function polarPoint(center: number, radius: number, angle: number) {
-  const radians = ((angle - 90) * Math.PI) / 180;
-  return { x: center + radius * Math.cos(radians), y: center + radius * Math.sin(radians) };
-}
-
-function annularSectorPath(center: number, innerRadius: number, outerRadius: number, startAngle: number, endAngle: number) {
-  const startInner = polarPoint(center, innerRadius, startAngle);
-  const startOuter = polarPoint(center, outerRadius, startAngle);
-  const endOuter = polarPoint(center, outerRadius, endAngle);
-  const endInner = polarPoint(center, innerRadius, endAngle);
-  return [`M ${startInner.x} ${startInner.y}`, `L ${startOuter.x} ${startOuter.y}`, `A ${outerRadius} ${outerRadius} 0 0 1 ${endOuter.x} ${endOuter.y}`, `L ${endInner.x} ${endInner.y}`, `A ${innerRadius} ${innerRadius} 0 0 0 ${startInner.x} ${startInner.y}`, "Z"].join(" ");
-}
-
-export default function WindRoseChart({ analysis }: WindRoseChartProps) {
-  const size = 400;
-  const center = size / 2;
-  const innerRadius = 20;
-  const maxRadius = 165;
-  const sectorAngle = 360 / analysis.sectorCount;
-  const maxSectorCount = Math.max(...analysis.sectors.map((sector) => sector.count), 1);
+export default function WindRoseChart({ analysis, mode }: WindRoseChartProps) {
+  const unit = mode === "wind" ? "m/s" : "m";
+  const classCount = analysis.classLabels.length;
+  const maxSectorCount = getMaxSectorCount(analysis);
+  const maxPercent = getMaxSectorPercent(analysis);
+  const ringLabelAngle = 180 / analysis.sectorCount;
 
   return (
     <div className="min-w-0 flex-1">
-      <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" className="mx-auto block h-auto w-full max-w-[420px]" aria-label="Wind rose chart" role="img">
-        {[0.25, 0.5, 0.75, 1].map((fraction) => <circle key={fraction} cx={center} cy={center} r={innerRadius + fraction * (maxRadius - innerRadius)} fill="none" stroke="#e2e8f0" />)}
-        {analysis.sectors.map((sector, index) => {
-          const angle = index * sectorAngle;
-          const spokeEnd = polarPoint(center, maxRadius, angle);
-          const labelPoint = polarPoint(center, maxRadius + 15, angle);
-          let radiusCursor = innerRadius;
-          const startAngle = angle - sectorAngle / 2 + 1;
-          const endAngle = angle + sectorAngle / 2 - 1;
-          return <g key={sector.sectorIndex}>
-            <line x1={center} y1={center} x2={spokeEnd.x} y2={spokeEnd.y} stroke="#e2e8f0" />
-            {sector.classes.map((windClass, classIndex) => {
-              const nextRadius = radiusCursor + (windClass.count / maxSectorCount) * (maxRadius - innerRadius);
-              const path = annularSectorPath(center, radiusCursor, nextRadius, startAngle, endAngle);
-              radiusCursor = nextRadius;
-              return windClass.count > 0 ? <path key={classIndex} d={path} fill={COLORS[classIndex % COLORS.length]} /> : null;
-            })}
-            <text x={labelPoint.x} y={labelPoint.y} dominantBaseline="middle" fill="#94a3b8" fontSize="10" textAnchor="middle">{Math.round(angle)}°</text>
-          </g>;
+      <svg
+        viewBox={`0 0 ${CHART_SIZE} ${CHART_SIZE}`}
+        width="100%"
+        height="100%"
+        preserveAspectRatio="xMidYMid meet"
+        className="mx-auto block h-auto w-full max-w-[420px]"
+        aria-label={`${mode === "wind" ? "Wind" : "Wave"} rose chart`}
+        role="img"
+      >
+        {RING_FRACTIONS.map((fraction) => (
+          <circle
+            key={fraction}
+            cx={CHART_CENTER}
+            cy={CHART_CENTER}
+            r={getRingRadius(fraction)}
+            fill="none"
+            stroke="#e2e8f0"
+          />
+        ))}
+
+        {analysis.sectors.map((sector) => {
+          const { start, end } = getSectorAngles(
+            sector.sectorIndex,
+            analysis.sectorCount,
+          );
+          const spokeEnd = polarPoint(MAX_RADIUS, sector.center);
+
+          return (
+            <g key={sector.sectorIndex}>
+              <line
+                x1={CHART_CENTER}
+                y1={CHART_CENTER}
+                x2={spokeEnd.x}
+                y2={spokeEnd.y}
+                stroke="#e2e8f0"
+              />
+
+              {getStackSegments(sector, maxSectorCount).map((segment) => (
+                <path
+                  key={segment.classIndex}
+                  d={annularSectorPath(
+                    segment.innerRadius,
+                    segment.outerRadius,
+                    start,
+                    end,
+                  )}
+                  fill={getWindRoseClassColor(segment.classIndex, classCount)}
+                  className="transition-opacity hover:opacity-80"
+                >
+                  <title>{describeSegment(sector, segment, unit)}</title>
+                </path>
+              ))}
+            </g>
+          );
         })}
-        <circle cx={center} cy={center} r={innerRadius} fill="#fff" />
+
+        {RING_FRACTIONS.map((fraction) => {
+          const point = polarPoint(getRingRadius(fraction), ringLabelAngle);
+
+          return (
+            <text
+              key={fraction}
+              x={point.x}
+              y={point.y}
+              fontSize="9"
+              fill="#94a3b8"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              paintOrder="stroke"
+              stroke="#ffffff"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            >
+              {formatRingPercent(fraction * maxPercent)}
+            </text>
+          );
+        })}
+
+        <circle
+          cx={CHART_CENTER}
+          cy={CHART_CENTER}
+          r={INNER_RADIUS}
+          fill="#ffffff"
+        />
+
+        {COMPASS_LABELS.map(({ label, angle, isCardinal }) => {
+          const point = polarPoint(MAX_RADIUS + 16, angle);
+
+          return (
+            <text
+              key={label}
+              x={point.x}
+              y={point.y}
+              fontSize={isCardinal ? 12 : 10}
+              fontWeight={isCardinal ? 600 : 400}
+              fill={isCardinal ? "#334155" : "#94a3b8"}
+              textAnchor="middle"
+              dominantBaseline="middle"
+            >
+              {label}
+            </text>
+          );
+        })}
       </svg>
     </div>
   );

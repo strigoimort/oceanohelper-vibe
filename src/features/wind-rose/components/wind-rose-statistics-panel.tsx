@@ -1,25 +1,75 @@
-import type { WindRoseAnalysis } from "../../../utils/wind-rose";
+import Card from "../../../components/ui/card";
+import StatTile from "../../../components/ui/stat-tile";
+import type { WindRoseMode } from "../../../constants/wind-rose";
+import {
+  getCompassPoint,
+  type WindRoseAnalysis,
+} from "../../../utils/wind-rose";
 
-type WindRoseStatisticsPanelProps = { analysis: WindRoseAnalysis; mode: "wind" | "wave" };
+type WindRoseStatisticsPanelProps = {
+  analysis: WindRoseAnalysis;
+  mode: WindRoseMode;
+};
 
-export default function WindRoseStatisticsPanel({ analysis, mode }: WindRoseStatisticsPanelProps) {
-  const magnitudeLabel = mode === "wind" ? "Mean speed" : "Mean height";
-  const metrics = [
-    ["Observations", analysis.stats.observationCount],
-    ["Dominant dir.", `${analysis.stats.dominantDirection?.toFixed(1) ?? "—"}°`],
-    ["Mean dir.", `${analysis.stats.meanDirection.toFixed(1)}°`],
-    [magnitudeLabel, analysis.stats.meanMagnitude.toFixed(2)],
-    ["Min", analysis.stats.minMagnitude?.toFixed(2) ?? "—"],
-    ["Max", analysis.stats.maxMagnitude?.toFixed(2) ?? "—"],
-  ];
+function formatDegrees(value: number | null): string {
+  return value === null ? "—" : `${value.toFixed(1)}°`;
+}
 
-  return <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-    <h3 className="text-base font-semibold text-slate-900">Summary statistics</h3>
-    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
-      {metrics.map(([label, value]) => <div key={label} className="min-w-0 rounded-xl bg-slate-50 p-3">
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className="mt-1 truncate text-lg font-semibold text-slate-900">{value}</p>
-      </div>)}
-    </div>
-  </section>;
+export default function WindRoseStatisticsPanel({
+  analysis,
+  mode,
+}: WindRoseStatisticsPanelProps) {
+  const { stats, beaufortClass } = analysis;
+  const hasObservations = stats.observationCount > 0;
+  const unit = mode === "wind" ? "m/s" : "m";
+  const magnitudeName = mode === "wind" ? "speed" : "height";
+
+  return (
+    <Card>
+      <h3 className="text-base font-semibold text-ink">Summary statistics</h3>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <StatTile label="Observations" value={stats.observationCount} />
+        <StatTile
+          label="Dominant direction"
+          value={formatDegrees(stats.dominantDirection)}
+          hint={
+            stats.dominantDirection === null
+              ? undefined
+              : getCompassPoint(stats.dominantDirection)
+          }
+        />
+        <StatTile
+          label="Mean direction"
+          value={hasObservations ? formatDegrees(stats.meanDirection) : "—"}
+          hint={
+            hasObservations ? getCompassPoint(stats.meanDirection) : undefined
+          }
+        />
+        <StatTile
+          label={`Mean ${magnitudeName} (${unit})`}
+          value={hasObservations ? stats.meanMagnitude.toFixed(2) : "—"}
+        />
+        <StatTile
+          label={`Min (${unit})`}
+          value={stats.minMagnitude?.toFixed(2) ?? "—"}
+        />
+        <StatTile
+          label={`Max (${unit})`}
+          value={stats.maxMagnitude?.toFixed(2) ?? "—"}
+        />
+      </div>
+
+      {mode === "wind" && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-accent-soft px-3 py-2.5">
+          <p className="text-xs text-slate-600">Beaufort class (mean speed)</p>
+          <p className="truncate text-sm font-semibold text-accent">
+            {beaufortClass
+              ? `Bft ${beaufortClass.number} · ${beaufortClass.label}`
+              : "—"}
+          </p>
+        </div>
+      )}
+    </Card>
+  );
 }

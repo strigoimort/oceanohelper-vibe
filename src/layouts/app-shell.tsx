@@ -11,15 +11,15 @@ export default function AppShell() {
   const isFullBleed = FULL_BLEED_ROUTES.includes(location.pathname);
 
   return (
-    <div className="flex h-screen flex-col bg-slate-100 text-slate-900">
+    <div className="flex h-screen flex-col bg-canvas text-ink">
       <AppHeader />
 
       <div className="flex flex-1 overflow-hidden">
         <AppSidebar />
 
         <main
-          className={`flex flex-1 overflow-y-auto bg-white ${
-            isFullBleed ? "" : "p-8"
+          className={`flex flex-1 overflow-y-auto ${
+            isFullBleed ? "bg-white" : "bg-canvas p-8"
           }`}
         >
           <Outlet />

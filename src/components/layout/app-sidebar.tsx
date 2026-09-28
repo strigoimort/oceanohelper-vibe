@@ -22,7 +22,7 @@ export default function AppSidebar() {
                   "group flex items-start gap-4 rounded-r-xl border-l-4 px-3 py-2.5 transition-all duration-200",
 
                   isActive
-                    ? "border-sky-600 bg-sky-50 shadow-sm"
+                    ? "border-accent bg-accent-soft shadow-sm"
                     : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:translate-x-1",
                 ].join(" ")
               }
@@ -33,7 +33,7 @@ export default function AppSidebar() {
                   <span
                     className={`mt-0.5 text-lg transition-colors ${
                       isActive
-                        ? "text-sky-600"
+                        ? "text-accent"
                         : "text-slate-400 group-hover:text-slate-700"
                     }`}
                   >

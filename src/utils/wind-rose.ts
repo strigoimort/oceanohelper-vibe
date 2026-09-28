@@ -1,5 +1,31 @@
-import { BEAUFORT_SCALE } from "../constants/wind-rose";
+import {
+  BEAUFORT_SCALE,
+  MAX_BREAKPOINTS,
+  WIND_ROSE_COLOR_STOPS,
+} from "../constants/wind-rose";
 import type { WindRoseMode } from "../constants/wind-rose";
+import { sampleColorScale } from "./color-scale";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const COMPASS_POINTS = [
+  "N",
+  "NNE",
+  "NE",
+  "ENE",
+  "E",
+  "ESE",
+  "SE",
+  "SSE",
+  "S",
+  "SSW",
+  "SW",
+  "WSW",
+  "W",
+  "WNW",
+  "NW",
+  "NNW",
+];
 
 export type WindRoseRecord = {
   direction: number;
@@ -7,11 +33,14 @@ export type WindRoseRecord = {
   timestamp: string | null;
 };
 
+/** `null` means "unbounded". A direction range with From > To wraps through north. */
 export type WindRoseFilters = {
   dateFrom: string | null;
   dateTo: string | null;
-  magnitudeRange: [number, number];
-  directionRange: [number, number];
+  magnitudeMin: number | null;
+  magnitudeMax: number | null;
+  directionFrom: number | null;
+  directionTo: number | null;
 };
 
 export type WindRoseClassSummary = {
@@ -52,6 +81,14 @@ export type WindRoseAnalysis = {
   } | null;
 };
 
+function toRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+function toDegrees(radians: number): number {
+  return (radians * 180) / Math.PI;
+}
+
 function clampDirection(value: number): number {
   const normalized = ((value % 360) + 360) % 360;
   return Number.isNaN(normalized) ? 0 : normalized;
@@ -59,7 +96,7 @@ function clampDirection(value: number): number {
 
 function formatNumber(value: number): string {
   if (!Number.isFinite(value)) return "∞";
-  return value.toFixed(1);
+  return String(Number(value.toFixed(2)));
 }
 
 function createClassLabels(breakpoints: number[]): string[] {
@@ -91,9 +128,10 @@ function getMagnitudeClassIndex(
 function getSectorIndex(direction: number, sectorCount: number): number {
   if (sectorCount <= 0) return 0;
   const sectorSize = 360 / sectorCount;
-  const normalized = clampDirection(direction);
-  const sectorIndex = Math.floor(normalized / sectorSize);
-  return Math.min(sectorCount - 1, sectorIndex);
+  // Sectors are centered on compass points (N covers 348.75°–11.25° with
+  // 16 sectors), so directions are shifted by half a sector before binning.
+  const shifted = (clampDirection(direction) + sectorSize / 2) % 360;
+  return Math.min(sectorCount - 1, Math.floor(shifted / sectorSize));
 }
 
 function matchesDateFilter(
@@ -118,8 +156,9 @@ function matchesDateFilter(
   }
 
   if (dateTo) {
+    // "To" is inclusive of the whole selected day.
     const toValue = Date.parse(dateTo);
-    if (!Number.isNaN(toValue) && timestampValue > toValue) {
+    if (!Number.isNaN(toValue) && timestampValue > toValue + DAY_MS - 1) {
       return false;
     }
   }
@@ -127,50 +166,67 @@ function matchesDateFilter(
   return true;
 }
 
-export function classifyBeaufortSpeed(magnitude: number) {
+function matchesMagnitudeFilter(
+  magnitude: number,
+  min: number | null,
+  max: number | null,
+): boolean {
   return (
-    BEAUFORT_SCALE.find(
-      (entry) => magnitude >= entry.minSpeed && magnitude <= entry.maxSpeed,
-    ) ?? null
+    (min === null || magnitude >= min) && (max === null || magnitude <= max)
   );
 }
 
-export function buildWindRoseSvgMarkup(
-  analysis: WindRoseAnalysis,
-  mode: WindRoseMode,
+function matchesDirectionFilter(
+  direction: number,
+  from: number | null,
+  to: number | null,
+): boolean {
+  if (from === null && to === null) return true;
+
+  const start = Math.min(360, Math.max(0, from ?? 0));
+  const end = Math.min(360, Math.max(0, to ?? 360));
+  const normalized = clampDirection(direction);
+
+  return start <= end
+    ? normalized >= start && normalized <= end
+    : normalized >= start || normalized <= end;
+}
+
+export function hasActiveFilters(filters: WindRoseFilters): boolean {
+  return Object.values(filters).some((value) => value !== null);
+}
+
+/** 16-point compass label (e.g. "NNE") for a direction in degrees. */
+export function getCompassPoint(degrees: number): string {
+  const index =
+    Math.round(clampDirection(degrees) / 22.5) % COMPASS_POINTS.length;
+  return COMPASS_POINTS[index];
+}
+
+export function getWindRoseClassColor(
+  index: number,
+  classCount: number,
 ): string {
-  const size = 360;
-  const center = size / 2;
-  const maxRadius = size * 0.36;
-  const total = analysis.records.length || 1;
+  const position = classCount <= 1 ? 0 : index / (classCount - 1);
+  return sampleColorScale(WIND_ROSE_COLOR_STOPS, position);
+}
 
-  const sectors = analysis.sectors
-    .map((sector) => {
-      const angle =
-        (sector.sectorIndex / analysis.sectorCount) * Math.PI * 2 - Math.PI / 2;
-      const radius = maxRadius * (sector.count / total);
-      const x1 = center + Math.cos(angle) * radius;
-      const y1 = center + Math.sin(angle) * radius;
-      const x2 =
-        center +
-        Math.cos(angle + (Math.PI * 2) / analysis.sectorCount) * radius;
-      const y2 =
-        center +
-        Math.sin(angle + (Math.PI * 2) / analysis.sectorCount) * radius;
+/** Parses "0.5, 1, 2" into sorted, unique, positive class upper bounds. */
+export function parseBreakpoints(input: string): number[] {
+  const values = input
+    .split(/[\s,;]+/)
+    .filter(Boolean)
+    .map(Number)
+    .filter((value) => Number.isFinite(value) && value > 0);
 
-      return `<polygon points="${center},${center} ${x1},${y1} ${x2},${y2}" fill="#0ea5e9" fill-opacity="0.35" stroke="#0f172a" stroke-width="0.6" />`;
-    })
-    .join("\n");
+  return Array.from(new Set(values))
+    .sort((left, right) => left - right)
+    .slice(0, MAX_BREAKPOINTS);
+}
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="1200" height="1200"><rect width="100%" height="100%" fill="#f8fafc" /><circle cx="${center}" cy="${center}" r="${maxRadius}" fill="none" stroke="#cbd5e1" stroke-width="1" />${Array.from(
-    { length: 4 },
-    (_, index) => {
-      const radius = (maxRadius / 4) * (index + 1);
-      return `<circle cx="${center}" cy="${center}" r="${radius}" fill="none" stroke="#e2e8f0" stroke-width="1" />`;
-    },
-  ).join(
-    "",
-  )}${sectors}<text x="${center}" y="30" text-anchor="middle" font-size="20" fill="#0f172a">${mode === "wind" ? "Wind Rose" : "Wave Rose"}</text></svg>`;
+export function classifyBeaufortSpeed(magnitude: number) {
+  // Upper bounds are used so speeds between two published ranges still classify.
+  return BEAUFORT_SCALE.find((entry) => magnitude <= entry.maxSpeed) ?? null;
 }
 
 export function buildWindRoseAnalysis(
@@ -180,38 +236,33 @@ export function buildWindRoseAnalysis(
   breakpoints: number[],
   filters: WindRoseFilters,
 ): WindRoseAnalysis {
-  const filteredRecords = records.filter((record) => {
-    if (
-      !matchesDateFilter(record.timestamp, filters.dateFrom, filters.dateTo)
-    ) {
-      return false;
-    }
-
-    if (
-      record.magnitude < filters.magnitudeRange[0] ||
-      record.magnitude > filters.magnitudeRange[1]
-    ) {
-      return false;
-    }
-
-    const direction = clampDirection(record.direction);
-    return (
-      direction >= filters.directionRange[0] &&
-      direction <= filters.directionRange[1]
-    );
-  });
+  const filteredRecords = records.filter(
+    (record) =>
+      matchesDateFilter(record.timestamp, filters.dateFrom, filters.dateTo) &&
+      matchesMagnitudeFilter(
+        record.magnitude,
+        filters.magnitudeMin,
+        filters.magnitudeMax,
+      ) &&
+      matchesDirectionFilter(
+        record.direction,
+        filters.directionFrom,
+        filters.directionTo,
+      ),
+  );
 
   const classLabels = createClassLabels(breakpoints);
-  const classCount = classLabels.length;
+  const sectorSize = 360 / sectorCount;
+
   const sectorData = Array.from({ length: sectorCount }, (_, sectorIndex) => ({
     sectorIndex,
-    label: `${Math.round((sectorIndex / sectorCount) * 360)}°`,
-    center: (sectorIndex + 0.5) * (360 / sectorCount),
+    label: `${Number((sectorIndex * sectorSize).toFixed(2))}°`,
+    center: sectorIndex * sectorSize,
     count: 0,
     percent: 0,
-    classes: Array.from({ length: classCount }, (_, classIndex) => ({
+    classes: classLabels.map((label, classIndex) => ({
       index: classIndex,
-      label: classLabels[classIndex],
+      label,
       count: 0,
       percent: 0,
     })),
@@ -225,7 +276,7 @@ export function buildWindRoseAnalysis(
   });
 
   const totalCount = filteredRecords.length;
-  const sectors = sectorData.map((sector) => ({
+  const sectors: WindRoseSectorSummary[] = sectorData.map((sector) => ({
     ...sector,
     percent: totalCount === 0 ? 0 : (sector.count / totalCount) * 100,
     classes: sector.classes.map((entry) => ({
@@ -235,42 +286,30 @@ export function buildWindRoseAnalysis(
   }));
 
   const dominantSector = sectors.reduce<WindRoseSectorSummary | null>(
-    (current, sector) => {
-      if (!current || sector.count > current.count) {
-        return sector;
-      }
-      return current;
-    },
+    (current, sector) =>
+      !current || sector.count > current.count ? sector : current,
     null,
   );
 
+  // Directions are circular, so the mean is taken from the vector sum.
+  const sinSum = filteredRecords.reduce(
+    (sum, record) => sum + Math.sin(toRadians(record.direction)),
+    0,
+  );
+  const cosSum = filteredRecords.reduce(
+    (sum, record) => sum + Math.cos(toRadians(record.direction)),
+    0,
+  );
   const meanDirection =
-    filteredRecords.length === 0
+    totalCount === 0
       ? 0
-      : clampDirection(
-          (Math.atan2(
-            filteredRecords.reduce(
-              (sum, record) =>
-                sum + Math.sin((record.direction * Math.PI) / 180),
-              0,
-            ),
-            filteredRecords.reduce(
-              (sum, record) =>
-                sum + Math.cos((record.direction * Math.PI) / 180),
-              0,
-            ),
-          ) *
-            180) /
-            Math.PI,
-        );
-
-  const meanMagnitude =
-    filteredRecords.length === 0
-      ? 0
-      : filteredRecords.reduce((sum, record) => sum + record.magnitude, 0) /
-        filteredRecords.length;
+      : clampDirection(toDegrees(Math.atan2(sinSum, cosSum)));
 
   const magnitudes = filteredRecords.map((record) => record.magnitude);
+  const meanMagnitude =
+    totalCount === 0
+      ? 0
+      : magnitudes.reduce((sum, value) => sum + value, 0) / totalCount;
 
   return {
     records: filteredRecords,
@@ -279,15 +318,18 @@ export function buildWindRoseAnalysis(
     classLabels,
     sectors,
     stats: {
-      observationCount: filteredRecords.length,
-      dominantDirection: dominantSector?.center ?? null,
+      observationCount: totalCount,
+      dominantDirection:
+        dominantSector && dominantSector.count > 0
+          ? dominantSector.center
+          : null,
       meanDirection,
       meanMagnitude,
-      minMagnitude: magnitudes.length === 0 ? null : Math.min(...magnitudes),
-      maxMagnitude: magnitudes.length === 0 ? null : Math.max(...magnitudes),
+      minMagnitude: totalCount === 0 ? null : Math.min(...magnitudes),
+      maxMagnitude: totalCount === 0 ? null : Math.max(...magnitudes),
     },
     beaufortClass:
-      mode === "wind" && filteredRecords.length > 0
+      mode === "wind" && totalCount > 0
         ? classifyBeaufortSpeed(meanMagnitude)
         : null,
   };

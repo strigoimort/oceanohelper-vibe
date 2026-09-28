@@ -27,7 +27,7 @@ export default function WindRoseToolbar({
         type="button"
         onClick={onExportCsv}
         disabled={!hasData}
-        className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
       >
         <Download size={16} />
         Export CSV

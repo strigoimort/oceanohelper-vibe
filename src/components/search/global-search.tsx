@@ -17,7 +17,7 @@ export default function GlobalSearch() {
 
   return (
     <div className="relative w-full max-w-lg">
-      <div className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 transition-all focus-within:border-sky-500 focus-within:bg-white">
+      <div className="flex h-10 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 transition-all focus-within:border-accent focus-within:bg-white">
         <Search size={18} className="text-slate-400" />
 
         <input
@@ -56,13 +56,15 @@ export default function GlobalSearch() {
                 onMouseEnter={() => setSelectedIndex(index)}
                 onClick={() => selectItem(item)}
                 className={`flex w-full items-center gap-4 px-4 py-3 text-left transition-colors ${
-                  index === selectedIndex ? "bg-sky-50" : "hover:bg-slate-50"
+                  index === selectedIndex
+                    ? "bg-accent-soft"
+                    : "hover:bg-slate-50"
                 }`}
               >
                 <Icon
                   size={18}
                   className={
-                    index === selectedIndex ? "text-sky-600" : "text-slate-500"
+                    index === selectedIndex ? "text-accent" : "text-slate-500"
                   }
                 />
 

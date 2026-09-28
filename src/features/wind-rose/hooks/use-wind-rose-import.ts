@@ -15,6 +15,13 @@ const EMPTY_MAPPING: WindRoseColumnMapping = {
   timestamp: null,
 };
 
+// Empty cells must not become 0, and Excel with an Indonesian locale
+// exports decimal commas ("12,5").
+function parseNumericCell(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") return Number.NaN;
+  return Number(value.trim().replace(",", "."));
+}
+
 export function useWindRoseImport() {
   const [isOpen, setIsOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -63,8 +70,8 @@ export function useWindRoseImport() {
       return accumulator;
     }
 
-    const direction = Number(row[mapping.direction]);
-    const magnitude = Number(row[mapping.magnitude]);
+    const direction = parseNumericCell(row[mapping.direction]);
+    const magnitude = parseNumericCell(row[mapping.magnitude]);
     const timestampValue = mapping.timestamp ? row[mapping.timestamp] : null;
 
     if (Number.isNaN(direction) || Number.isNaN(magnitude)) {

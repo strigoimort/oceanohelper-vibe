@@ -1,3 +1,7 @@
+import { Upload, Waves, Wind } from "lucide-react";
+
+import Card from "../components/ui/card";
+import EmptyState from "../components/ui/empty-state";
 import WindRoseToolbar from "../features/wind-rose/components/wind-rose-toolbar";
 import WindRoseModeToggle from "../features/wind-rose/components/wind-rose-mode-toggle";
 import WindRoseChart from "../features/wind-rose/components/wind-rose-chart";
@@ -5,27 +9,36 @@ import WindRoseLegend from "../features/wind-rose/components/wind-rose-legend";
 import WindRoseStatisticsPanel from "../features/wind-rose/components/wind-rose-statistics-panel";
 import WindRoseBeaufortTable from "../features/wind-rose/components/wind-rose-beaufort-table";
 import WindRoseFilterPanel from "../features/wind-rose/components/wind-rose-filter-panel";
+import WindRoseSettingsPanel from "../features/wind-rose/components/wind-rose-settings-panel";
 import WindRoseImportDialog from "../features/wind-rose/components/wind-rose-import-dialog";
 import { useWindRoseImport } from "../features/wind-rose/hooks/use-wind-rose-import";
 import { useWindRoseData } from "../features/wind-rose/hooks/use-wind-rose-data";
 import { useWindRoseBins } from "../features/wind-rose/hooks/use-wind-rose-bins";
 import { downloadTextFile } from "../services/file-service";
-import {
-  buildWindRoseSvgMarkup,
-  type WindRoseFilters,
-} from "../utils/wind-rose";
+import { hasActiveFilters } from "../utils/wind-rose";
+import { buildWindRoseSvgMarkup } from "../utils/wind-rose-geometry";
 
 export default function WindRosePage() {
   const windRoseData = useWindRoseData("wind");
   const importDataset = useWindRoseImport();
 
+  const { mode, records, filters, classSettings } = windRoseData;
+
   const analysis = useWindRoseBins({
-    records: windRoseData.records,
-    mode: windRoseData.mode,
-    sectorCount: windRoseData.classSettings.sectorCount,
-    breakpoints: windRoseData.classSettings.breakpoints,
-    filters: windRoseData.filters,
+    records,
+    mode,
+    sectorCount: classSettings.sectorCount,
+    breakpoints: classSettings.breakpoints,
+    filters,
   });
+
+  const isWind = mode === "wind";
+  const hasData = records.length > 0;
+  const hasResults = analysis.records.length > 0;
+
+  const observationSummary = hasActiveFilters(filters)
+    ? `${analysis.records.length} of ${records.length} observations`
+    : `${records.length} observations`;
 
   const handleImportConfirm = () => {
     windRoseData.setRecords(importDataset.validRecords);
@@ -33,7 +46,8 @@ export default function WindRosePage() {
   };
 
   const handleExportCsv = () => {
-    const rows = [
+    const rows: (string | number)[][] = [
+      ["metric", "value"],
       ["observations", analysis.stats.observationCount],
       ["dominant_direction", analysis.stats.dominantDirection ?? ""],
       ["mean_direction", analysis.stats.meanDirection],
@@ -46,95 +60,112 @@ export default function WindRosePage() {
   };
 
   const handleExportSvg = () => {
-    const svgMarkup = buildWindRoseSvgMarkup(analysis, windRoseData.mode);
     downloadTextFile(
-      `wind-rose-${windRoseData.mode}-${Date.now()}.svg`,
-      svgMarkup,
+      `wind-rose-${mode}-${Date.now()}.svg`,
+      buildWindRoseSvgMarkup(analysis, mode),
       "image/svg+xml",
     );
   };
 
-  const handleFiltersChange = (filters: WindRoseFilters) => {
-    windRoseData.setFilters(filters);
-  };
-
-  const handleBreakpointsChange = (breakpoints: number[]) => {
-    windRoseData.setClassSettings((current) => ({
-      ...current,
-      breakpoints,
-    }));
-  };
-
-  const handleSectorCountChange = (sectorCount: number) => {
-    windRoseData.setClassSettings((current) => ({
-      ...current,
-      sectorCount,
-    }));
-  };
-
-  const handleReset = () => {
-    windRoseData.resetFilters();
-    windRoseData.setClassSettings((current) => ({
-      ...current,
-      sectorCount: 16,
-      breakpoints: windRoseData.classSettings.breakpoints,
-    }));
-  };
-
   return (
     <div className="w-full min-w-0 space-y-6">
-      <div className="flex min-w-0 flex-wrap items-start justify-between gap-4">
+      <header className="flex min-w-0 flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-            <h2 className="text-3xl font-semibold text-slate-900">Wind Rose</h2>
-            <p className="text-sm text-slate-600">
-              Directional analysis for wind and wave observations.
-            </p>
-          </div>
+          <h2 className="text-3xl font-semibold tracking-tight text-ink">
+            Wind Rose
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Directional analysis for wind and wave observations.
+          </p>
+        </div>
+
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <WindRoseModeToggle
-              mode={windRoseData.mode}
-              onChange={windRoseData.setMode}
-            />
-            <WindRoseToolbar
-              onImportClick={importDataset.open}
-              onExportCsv={handleExportCsv}
-              onExportSvg={handleExportSvg}
-              hasData={analysis.records.length > 0}
-            />
-          </div>
+          <WindRoseModeToggle mode={mode} onChange={windRoseData.setMode} />
+          <WindRoseToolbar
+            onImportClick={importDataset.open}
+            onExportCsv={handleExportCsv}
+            onExportSvg={handleExportSvg}
+            hasData={hasResults}
+          />
         </div>
+      </header>
 
-      <div className="grid min-w-0 grid-cols-12 items-start gap-6">
-        <section className="col-span-12 min-w-0 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-7">
-          <div className="mb-4 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-base font-semibold text-slate-900">
-              {windRoseData.mode === "wind" ? "Wind rose" : "Wave rose"}
-            </h3>
-            <p className="text-xs text-slate-400">
-              {analysis.sectorCount} sectors · {analysis.breakpoints.length} magnitude classes
-            </p>
-          </div>
-          <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center">
-            <WindRoseChart analysis={analysis} />
-            <WindRoseLegend analysis={analysis} mode={windRoseData.mode} />
-          </div>
-        </section>
+      {!hasData ? (
+        <Card padded={false}>
+          <EmptyState
+            icon={isWind ? <Wind size={22} /> : <Waves size={22} />}
+            title="No dataset imported"
+            description={`Import a CSV file with a direction column (degrees) and a ${
+              isWind ? "wind speed (m/s)" : "wave height (m)"
+            } column to generate the rose diagram.`}
+            action={
+              <button
+                type="button"
+                onClick={importDataset.open}
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover"
+              >
+                <Upload size={16} />
+                Import CSV
+              </button>
+            }
+          />
+        </Card>
+      ) : (
+        <div className="grid min-w-0 grid-cols-12 items-start gap-6">
+          <Card className="col-span-12 lg:col-span-7">
+            <div className="mb-4 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-base font-semibold text-ink">
+                {isWind ? "Wind rose" : "Wave rose"}
+              </h3>
+              <p className="text-xs text-slate-400">
+                {observationSummary} · {analysis.sectorCount} sectors
+              </p>
+            </div>
 
-        <div className="col-span-12 flex min-w-0 flex-col gap-6 lg:col-span-5">
-            <WindRoseStatisticsPanel analysis={analysis} mode={windRoseData.mode} />
+            {hasResults ? (
+              <div className="flex min-w-0 flex-col gap-6 lg:flex-row lg:items-center">
+                <WindRoseChart analysis={analysis} mode={mode} />
+                <WindRoseLegend analysis={analysis} mode={mode} />
+              </div>
+            ) : (
+              <EmptyState
+                title="No observations match the current filters"
+                description="Widen the date, magnitude, or direction range to see data again."
+                action={
+                  <button
+                    type="button"
+                    onClick={windRoseData.resetFilters}
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Reset filters
+                  </button>
+                }
+              />
+            )}
+          </Card>
+
+          <div className="col-span-12 flex min-w-0 flex-col gap-6 lg:col-span-5">
+            <WindRoseStatisticsPanel analysis={analysis} mode={mode} />
             <WindRoseFilterPanel
-              mode={windRoseData.mode}
-              filters={windRoseData.filters}
-              sectorCount={windRoseData.classSettings.sectorCount}
-              breakpoints={windRoseData.classSettings.breakpoints}
-              onFiltersChange={handleFiltersChange}
-              onSectorCountChange={handleSectorCountChange}
-              onBreakpointsChange={handleBreakpointsChange}
-              onReset={handleReset}
+              mode={mode}
+              filters={filters}
+              onFiltersChange={windRoseData.setFilters}
+              onReset={windRoseData.resetFilters}
             />
+            <WindRoseSettingsPanel
+              mode={mode}
+              sectorCount={classSettings.sectorCount}
+              breakpoints={classSettings.breakpoints}
+              onSectorCountChange={windRoseData.setSectorCount}
+              onBreakpointsChange={windRoseData.setBreakpoints}
+              onReset={windRoseData.resetClassSettings}
+            />
+          </div>
+
+          <WindRoseBeaufortTable mode={mode} />
         </div>
-        <WindRoseBeaufortTable mode={windRoseData.mode} />
-      </div>
+      )}
+
       <WindRoseImportDialog
         isOpen={importDataset.isOpen}
         fileName={importDataset.fileName}

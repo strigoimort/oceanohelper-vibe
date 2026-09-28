@@ -22,7 +22,7 @@ export default function GeospatialBasemapSwitcher({
         onClick={() => setIsOpen((prev) => !prev)}
         className={`flex h-10 w-10 items-center justify-center rounded-2xl border transition ${
           isOpen
-            ? "border-sky-200 bg-sky-100 text-sky-700"
+            ? "border-accent/20 bg-accent-soft text-accent"
             : "border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900"
         }`}
       >
@@ -46,7 +46,7 @@ export default function GeospatialBasemapSwitcher({
                 }}
                 className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
                   id === value
-                    ? "bg-sky-50 text-sky-700"
+                    ? "bg-accent-soft text-accent"
                     : "text-slate-700 hover:bg-slate-50"
                 }`}
               >

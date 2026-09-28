@@ -36,3 +36,16 @@ export function getDefaultBreakpoints(mode: WindRoseMode): number[] {
       )
     : DEFAULT_WAVE_HEIGHT_BREAKPOINTS;
 }
+
+export const MAX_BREAKPOINTS = 20;
+
+/** Low → high intensity gradient used to color magnitude classes. */
+export const WIND_ROSE_COLOR_STOPS = [
+  "#bae6fd",
+  "#38bdf8",
+  "#0ea5e9",
+  "#14b8a6",
+  "#facc15",
+  "#f97316",
+  "#dc2626",
+];

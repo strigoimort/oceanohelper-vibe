@@ -67,7 +67,7 @@ export default function ParticleTimeline({
           title={isPlaying ? "Pause" : "Play"}
           onClick={isPlaying ? onPause : onPlay}
           disabled={disabled}
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-600 text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPlaying ? <Pause size={16} /> : <Play size={16} />}
         </button>
@@ -100,7 +100,7 @@ export default function ParticleTimeline({
         value={frameIndex}
         disabled={disabled}
         onChange={(e) => onSeek(Number(e.target.value))}
-        className="h-1.5 flex-1 accent-sky-600 disabled:opacity-40"
+        className="h-1.5 flex-1 accent-accent disabled:opacity-40"
       />
 
       <span className="w-56 shrink-0 text-right text-xs font-medium text-slate-600">
@@ -120,7 +120,7 @@ export default function ParticleTimeline({
             onClick={() => onSpeedChange(option)}
             className={`rounded-md px-2 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
               option === speed
-                ? "bg-sky-600 text-white"
+                ? "bg-accent text-white"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
             }`}
           >

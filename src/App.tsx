@@ -7,8 +7,6 @@ import GeospatialWorkspacePage from "./pages/geospatial-workspace-page";
 import ParticleTracerPage from "./pages/particle-tracer-page";
 import WindRosePage from "./pages/wind-rose-page";
 
-import "./App.css";
-
 const toolDescriptions: Record<string, string> = {
   "geospatial-workspace":
     "The geospatial workspace will provide a shared map canvas for layers, measurements, and dataset management.",
