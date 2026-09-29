@@ -2,8 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import type { Feature } from "geojson";
 
-import { DRAWING_STYLES } from "../../../constants/drawing";
+import { DRAWING_STYLES, FILL_OPACITY_RATIO } from "../../../constants/drawing";
 import { calculateLineLength, formatDistance } from "../../../utils/geometry";
+import {
+  applyLayerAppearance,
+  markerIconHtml,
+} from "../../../utils/layer-style";
 
 export type DrawingToolType =
   | "select"
@@ -14,23 +18,32 @@ export type DrawingToolType =
   | "circle"
   | "measure";
 
+/** Layers can also be created outside the toolbar (a dataset import),
+ * hence "dataset" on top of the active drawing tools above. */
+export type DrawnLayerType = DrawingToolType | "dataset";
+
 export type DrawnLayer = {
   id: string;
-  type: DrawingToolType;
+  type: DrawnLayerType;
   name: string;
   color: string;
+  opacity: number;
   visible: boolean;
   leafletLayer: L.Layer;
+  /** Number of points contained in a "dataset" layer. */
+  featureCount?: number;
 };
 
 const HIGHLIGHT_COLOR = "#f59e0b";
+const HALO_WEIGHT_BOOST = 6;
+const HALO_OPACITY = 0.45;
 const DOUBLE_CLICK_MS = 400;
 const DOUBLE_CLICK_PIXELS = 12;
 
 let layerCounter = 0;
 const nextLayerId = () => `layer-${Date.now()}-${layerCounter++}`;
 
-function labelForType(type: DrawingToolType) {
+function labelForType(type: DrawnLayerType) {
   switch (type) {
     case "point":
       return "Point";
@@ -44,13 +57,47 @@ function labelForType(type: DrawingToolType) {
       return "Circle";
     case "measure":
       return "Measurement";
+    case "dataset":
+      return "Dataset";
     default:
       return "Feature";
   }
 }
 
-const pointIconHtml = () =>
-  `<span style="display:block;width:12px;height:12px;border-radius:9999px;background:${DRAWING_STYLES.point.color};border:2px solid white;box-shadow:0 0 0 1px rgba(0,0,0,0.15);"></span>`;
+/**
+ * Builds a non-interactive outline that sits behind `source` to signal
+ * "selected" without touching the shape's own color/style. Returns null
+ * for shapes the halo doesn't know how to clone (there are none currently,
+ * but this keeps the function total rather than throwing).
+ */
+function createHaloLayer(source: L.Path, weight: number): L.Path | null {
+  const haloStyle: L.PathOptions = {
+    color: HIGHLIGHT_COLOR,
+    weight,
+    opacity: HALO_OPACITY,
+    fill: false,
+    interactive: false,
+  };
+
+  if (source instanceof L.Circle) {
+    return L.circle(source.getLatLng(), {
+      ...haloStyle,
+      radius: source.getRadius(),
+    });
+  }
+
+  if (source instanceof L.Polygon) {
+    // Single-ring assumption, consistent with utils/geometry.ts.
+    const latlngs = (source.getLatLngs()[0] as L.LatLng[]) ?? [];
+    return L.polygon(latlngs, haloStyle);
+  }
+
+  if (source instanceof L.Polyline) {
+    return L.polyline(source.getLatLngs() as L.LatLng[], haloStyle);
+  }
+
+  return null;
+}
 
 /**
  * Manages the active drawing tool and the features created on the map.
@@ -63,6 +110,7 @@ export function useDrawingTools(map: L.Map | null) {
 
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
   const tempLayerRef = useRef<L.Layer | null>(null);
+  const haloLayerRef = useRef<L.Layer | null>(null);
   const drawingPointsRef = useRef<L.LatLng[]>([]);
   // Tracks the previous click so we can detect a "finish" click manually
   // (see the click handler below) instead of relying on the native
@@ -87,9 +135,16 @@ export function useDrawingTools(map: L.Map | null) {
   }, [map]);
 
   const registerLayer = useCallback(
-    (type: DrawingToolType, leafletLayer: L.Layer, customName?: string) => {
+    (
+      type: DrawnLayerType,
+      leafletLayer: L.Layer,
+      customName?: string,
+      featureCount?: number,
+    ) => {
       const id = nextLayerId();
-      const color = DRAWING_STYLES[type]?.color ?? DRAWING_STYLES.default.color;
+      const color = String(
+        DRAWING_STYLES[type]?.color ?? DRAWING_STYLES.default.color,
+      );
 
       layerGroupRef.current?.addLayer(leafletLayer);
       leafletLayer.on("click", () => setSelectedLayerId(id));
@@ -102,9 +157,11 @@ export function useDrawingTools(map: L.Map | null) {
           name:
             customName ||
             `${labelForType(type)} ${prev.filter((l) => l.type === type).length + 1}`,
-          color: String(color),
+          color,
+          opacity: 1,
           visible: true,
           leafletLayer,
+          featureCount,
         },
       ]);
       setSelectedLayerId(id);
@@ -193,20 +250,38 @@ export function useDrawingTools(map: L.Map | null) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [resetTempDrawing]);
 
-  // Highlight the selected feature and restore the rest to their default style.
+  // Every Path layer keeps its own true color/opacity at all times — the
+  // selected shape is never recolored. Instead, a separate halo outline is
+  // drawn behind it to signal selection, so a custom color is visible
+  // immediately even while its layer is selected.
   useEffect(() => {
+    if (haloLayerRef.current) {
+      layerGroupRef.current?.removeLayer(haloLayerRef.current);
+      haloLayerRef.current = null;
+    }
+
     layers.forEach((layer) => {
       if (!(layer.leafletLayer instanceof L.Path)) return;
-      const baseStyle = DRAWING_STYLES[layer.type] ?? DRAWING_STYLES.default;
+
+      const baseWeight = DRAWING_STYLES[layer.type]?.weight ?? 2;
+
+      layer.leafletLayer.setStyle({
+        color: layer.color,
+        weight: baseWeight,
+        opacity: layer.opacity,
+        fillOpacity: layer.opacity * FILL_OPACITY_RATIO,
+      });
 
       if (layer.id === selectedLayerId) {
-        layer.leafletLayer.setStyle({
-          color: HIGHLIGHT_COLOR,
-          weight: (baseStyle.weight ?? 2) + 2,
-        });
+        const halo = createHaloLayer(
+          layer.leafletLayer,
+          baseWeight + HALO_WEIGHT_BOOST,
+        );
+        if (halo) {
+          layerGroupRef.current?.addLayer(halo);
+          haloLayerRef.current = halo;
+        }
         layer.leafletLayer.bringToFront();
-      } else {
-        layer.leafletLayer.setStyle(baseStyle);
       }
     });
   }, [selectedLayerId, layers]);
@@ -236,7 +311,7 @@ export function useDrawingTools(map: L.Map | null) {
       const marker = L.marker(e.latlng, {
         icon: L.divIcon({
           className: "",
-          html: pointIconHtml(),
+          html: markerIconHtml(String(DRAWING_STYLES.point.color)),
           iconSize: [12, 12],
           iconAnchor: [6, 6],
         }),
@@ -427,18 +502,59 @@ export function useDrawingTools(map: L.Map | null) {
     setLayers((prev) => prev.map((l) => (l.id === id ? { ...l, name } : l)));
   }, []);
 
-  const addPointLayer = useCallback(
-    (lat: number, lng: number, label?: string) => {
-      const marker = L.marker([lat, lng], {
-        icon: L.divIcon({
-          className: "",
-          html: pointIconHtml(),
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-        }),
+  // Path layers (polygon/circle/etc.) are restyled by the highlight effect
+  // above, keyed on `layers`; only markers and marker groups (which that
+  // effect skips) need to be repainted here directly.
+  const setLayerColor = useCallback((id: string, color: string) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== id) return layer;
+        if (!(layer.leafletLayer instanceof L.Path)) {
+          applyLayerAppearance(layer.leafletLayer, color, layer.opacity);
+        }
+        return { ...layer, color };
+      }),
+    );
+  }, []);
+
+  const setLayerOpacity = useCallback((id: string, opacity: number) => {
+    setLayers((prev) =>
+      prev.map((layer) => {
+        if (layer.id !== id) return layer;
+        if (!(layer.leafletLayer instanceof L.Path)) {
+          applyLayerAppearance(layer.leafletLayer, layer.color, opacity);
+        }
+        return { ...layer, opacity };
+      }),
+    );
+  }, []);
+
+  /** Imports a full dataset (e.g. a CSV/Excel table of points) as a
+   * single layer, instead of one layer per row. */
+  const addPointDataset = useCallback(
+    (
+      records: { lat: number; lng: number; name?: string }[],
+      datasetName: string,
+    ) => {
+      const color = String(DRAWING_STYLES.dataset.color);
+
+      const markers = records.map((record) => {
+        const marker = L.marker([record.lat, record.lng], {
+          icon: L.divIcon({
+            className: "",
+            html: markerIconHtml(color),
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],
+          }),
+        });
+        if (record.name) marker.bindPopup(record.name);
+        return marker;
       });
-      if (label) marker.bindPopup(label);
-      registerLayer("point", marker, label);
+
+      // FeatureGroup (not plain LayerGroup) so a click on any marker
+      // bubbles up as a click on the group itself, selecting the layer.
+      const group = L.featureGroup(markers);
+      return registerLayer("dataset", group, datasetName, records.length);
     },
     [registerLayer],
   );
@@ -457,7 +573,7 @@ export function useDrawingTools(map: L.Map | null) {
           L.marker(latlng, {
             icon: L.divIcon({
               className: "",
-              html: pointIconHtml(),
+              html: markerIconHtml(String(DRAWING_STYLES.point.color)),
               iconSize: [12, 12],
               iconAnchor: [6, 6],
             }),
@@ -495,12 +611,11 @@ export function useDrawingTools(map: L.Map | null) {
 
       if (leafletLayer instanceof L.Marker) {
         map.setView(leafletLayer.getLatLng(), Math.max(map.getZoom(), 14));
-      } else if (leafletLayer instanceof L.Circle) {
-        map.fitBounds(leafletLayer.getBounds(), {
-          padding: [40, 40],
-          maxZoom: 16,
-        });
-      } else if (leafletLayer instanceof L.Polyline) {
+      } else if (
+        leafletLayer instanceof L.Circle ||
+        leafletLayer instanceof L.Polyline ||
+        leafletLayer instanceof L.FeatureGroup
+      ) {
         map.fitBounds(leafletLayer.getBounds(), {
           padding: [40, 40],
           maxZoom: 16,
@@ -519,7 +634,9 @@ export function useDrawingTools(map: L.Map | null) {
     deleteLayer,
     toggleLayerVisibility,
     renameLayer,
-    addPointLayer,
+    setLayerColor,
+    setLayerOpacity,
+    addPointDataset,
     addGeoJsonLayer,
     clearAllLayers,
   };

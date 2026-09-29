@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 
+import { LAYER_COLOR_PALETTE } from "../../../constants/drawing";
 import type { DrawnLayer } from "../hooks/use-drawing-tools";
 import {
   measureLeafletLayer,
@@ -16,6 +17,13 @@ function getMeasurementRows(
   if (!layer) {
     return [
       { label: "", value: "Select a feature to see measurements" },
+      { label: "", value: "" },
+    ];
+  }
+
+  if (layer.type === "dataset") {
+    return [
+      { label: "Points", value: String(layer.featureCount ?? 0) },
       { label: "", value: "" },
     ];
   }
@@ -94,6 +102,8 @@ type GeospatialPropertiesPanelProps = {
   onDeleteLayer: (id: string) => void;
   onToggleVisibility: (id: string) => void;
   onRenameLayer: (id: string, name: string) => void;
+  onColorChange: (id: string, color: string) => void;
+  onOpacityChange: (id: string, opacity: number) => void;
 };
 
 export default function GeospatialPropertiesPanel({
@@ -103,6 +113,8 @@ export default function GeospatialPropertiesPanel({
   onDeleteLayer,
   onToggleVisibility,
   onRenameLayer,
+  onColorChange,
+  onOpacityChange,
 }: GeospatialPropertiesPanelProps) {
   const selectedLayer = layers.find((l) => l.id === selectedLayerId) ?? null;
   const measurementRows = getMeasurementRows(selectedLayer);
@@ -124,10 +136,14 @@ export default function GeospatialPropertiesPanel({
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex min-h-0 flex-1 flex-col">
         <section className="flex flex-1 min-h-0 flex-col pb-3">
-          <h2 className="micro-label">Layers ({layers.length})</h2>
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Layers ({layers.length})
+          </h2>
 
           {layers.length === 0 ? (
-            <p className="mt-1 truncate body-text">No layers created</p>
+            <p className="mt-1 truncate text-sm text-slate-600">
+              No layers created
+            </p>
           ) : (
             <div className="mt-1 flex-1 overflow-y-auto panel-scroll">
               <ul className="space-y-0.5">
@@ -168,6 +184,11 @@ export default function GeospatialPropertiesPanel({
                             }}
                           >
                             {layer.name}
+                          </span>
+                        )}
+                        {layer.type === "dataset" && (
+                          <span className="shrink-0 text-xs text-slate-400">
+                            ({layer.featureCount ?? 0})
                           </span>
                         )}
                       </span>
@@ -221,8 +242,8 @@ export default function GeospatialPropertiesPanel({
           )}
         </section>
 
-        <section className="h-20 shrink-0">
-          <h2 className="text-[11px] border-t pt-2 border-slate-100 font-semibold uppercase tracking-wide text-slate-400">
+        <section className="shrink-0 border-t border-slate-100 pt-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Measurements
           </h2>
           <dl className="mt-1 space-y-0.5 text-sm">
@@ -246,27 +267,76 @@ export default function GeospatialPropertiesPanel({
           </dl>
         </section>
 
-        <section className="shrink-0 h-17 border-t border-slate-100 pt-2">
-          <h2 className="micro-label">Selected object</h2>
+        <section className="shrink-0 border-t border-slate-100 pt-2">
+          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            Selected object
+          </h2>
 
           {!selectedLayer ? (
-            <p className="mt-1 body-text">None selected</p>
+            <p className="mt-1 text-sm text-slate-600">None selected</p>
           ) : (
-            <dl className="mt-1 space-y-1 text-sm">
-              <div className="flex items-center justify-between">
-                <dt className="text-slate-600">Name</dt>
-                <dd className="max-w-[60%] truncate text-right font-medium text-slate-900">
-                  {selectedLayer.name}
-                </dd>
+            <div className="mt-1 space-y-3">
+              <dl className="space-y-1 text-sm">
+                <div className="flex items-center justify-between">
+                  <dt className="text-slate-600">Name</dt>
+                  <dd className="max-w-[60%] truncate text-right font-medium text-slate-900">
+                    {selectedLayer.name}
+                  </dd>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <dt className="text-slate-600">Type</dt>
+                  <dd className="font-medium capitalize text-slate-900">
+                    {selectedLayer.type}
+                  </dd>
+                </div>
+              </dl>
+
+              <div>
+                <p className="text-xs font-medium text-slate-500">Color</p>
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {LAYER_COLOR_PALETTE.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      title={color}
+                      onClick={() => onColorChange(selectedLayer.id, color)}
+                      className={`h-6 w-6 rounded-full border-2 transition ${
+                        selectedLayer.color.toLowerCase() ===
+                        color.toLowerCase()
+                          ? "border-slate-900"
+                          : "border-transparent"
+                      }`}
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={selectedLayer.color}
+                    onChange={(e) =>
+                      onColorChange(selectedLayer.id, e.target.value)
+                    }
+                    title="Custom color"
+                    className="h-6 w-6 cursor-pointer rounded-full border border-slate-200 bg-transparent p-0"
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <dt className="text-slate-600">Type</dt>
-                <dd className="font-medium capitalize text-slate-900">
-                  {selectedLayer.type}
-                </dd>
-              </div>
-            </dl>
+              <label className="block text-xs font-medium text-slate-500">
+                Opacity ({Math.round(selectedLayer.opacity * 100)}%)
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={selectedLayer.opacity}
+                  onChange={(e) =>
+                    onOpacityChange(selectedLayer.id, Number(e.target.value))
+                  }
+                  className="mt-1.5 h-1.5 w-full accent-accent"
+                />
+              </label>
+            </div>
           )}
         </section>
       </div>

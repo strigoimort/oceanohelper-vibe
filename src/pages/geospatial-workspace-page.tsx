@@ -6,7 +6,6 @@ import GeospatialMap from "../features/geospatial-workspace/components/geospatia
 import GeospatialPropertiesPanel from "../features/geospatial-workspace/components/geospatial-properties-panel";
 import GeospatialToolbar from "../features/geospatial-workspace/components/geospatial-toolbar";
 import GeospatialImportDialog from "../features/geospatial-workspace/components/geospatial-import-dialog";
-// import { exportElementAsPng, downloadTextFile } from "../services/file-service";
 import { downloadTextFile } from "../services/file-service";
 import { useDrawingTools } from "../features/geospatial-workspace/hooks/use-drawing-tools";
 import { useDatasetImport } from "../features/geospatial-workspace/hooks/use-dataset-import";
@@ -30,21 +29,25 @@ export default function GeospatialWorkspacePage() {
     deleteLayer,
     toggleLayerVisibility,
     renameLayer,
-    addPointLayer,
+    setLayerColor,
+    setLayerOpacity,
+    addPointDataset,
     addGeoJsonLayer,
   } = useDrawingTools(map);
 
   const importDataset = useDatasetImport();
 
   const handleImportConfirm = () => {
-    if (importDataset.kind === "csv") {
-      const bounds: [number, number][] = [];
-      importDataset.validRecords.forEach((record) => {
-        addPointLayer(record.lat, record.lng, record.name);
-        bounds.push([record.lat, record.lng]);
-      });
-      if (map && bounds.length > 0)
-        map.fitBounds(bounds, { padding: [40, 40] });
+    if (importDataset.kind === "csv" && importDataset.validRecords.length > 0) {
+      addPointDataset(
+        importDataset.validRecords,
+        importDataset.fileName ?? "Dataset",
+      );
+
+      const bounds: [number, number][] = importDataset.validRecords.map(
+        (record) => [record.lat, record.lng],
+      );
+      if (map) map.fitBounds(bounds, { padding: [40, 40] });
     }
 
     if (importDataset.kind === "shapefile") {
@@ -74,27 +77,9 @@ export default function GeospatialWorkspacePage() {
     );
   };
 
-  // const handleExportPng = async () => {
-  //   if (!map) return;
-
-  //   try {
-  //     await exportElementAsPng(
-  //       map.getContainer(),
-  //       `oceanohelper-map-${Date.now()}.png`,
-  //     );
-  //   } catch (error) {
-  //     console.error(error);
-  //     window.alert(
-  //       basemap === "streets"
-  //         ? "Export PNG tidak didukung untuk basemap Streets (tile OpenStreetMap tidak mengizinkan CORS). Ganti ke Dark/Ocean/Satellite/Terrain lalu coba lagi."
-  //         : "Gagal export PNG. Pastikan package 'html2canvas' sudah terinstall (pnpm add html2canvas), lalu coba lagi.",
-  //     );
-  //   }
-  // };
-
   return (
-    <div className="flex h-full w-full min-h-0 overflow-hidden bg-slate-50">
-      <div className="flex min-w-0 flex-1 min-h-0 flex-col">
+    <div className="flex h-full w-full min-h-0 overflow-hidden bg-white">
+      <div className="flex flex-1 min-h-0 flex-col">
         <div className="relative flex-1 min-h-0">
           <div className="absolute inset-0">
             <GeospatialMap
@@ -127,7 +112,6 @@ export default function GeospatialWorkspacePage() {
                 onToolChange={setActiveTool}
                 onImportClick={importDataset.open}
                 onExportGeoJson={handleExportGeoJson}
-                // onExportPng={handleExportPng}
                 hasLayers={layers.length > 0}
                 basemap={basemap}
                 onBasemapChange={setBasemap}
@@ -137,7 +121,7 @@ export default function GeospatialWorkspacePage() {
         </div>
       </div>
 
-      <aside className="w-[320px] shrink-0 flex flex-col border-l border-slate-200 bg-white">
+      <aside className="w-[320px] flex flex-col border-l border-slate-200 bg-white">
         <div className="min-h-0 flex-1 overflow-hidden p-4">
           <GeospatialPropertiesPanel
             layers={layers}
@@ -146,6 +130,8 @@ export default function GeospatialWorkspacePage() {
             onDeleteLayer={deleteLayer}
             onToggleVisibility={toggleLayerVisibility}
             onRenameLayer={renameLayer}
+            onColorChange={setLayerColor}
+            onOpacityChange={setLayerOpacity}
           />
         </div>
       </aside>
