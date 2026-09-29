@@ -50,10 +50,8 @@ export default function WindRosePage() {
     <div className="w-full min-w-0 space-y-6">
       <header className="flex min-w-0 flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-3xl font-semibold tracking-tight text-ink">
-            Wind Rose
-          </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <h2 className=" page-title">Wind Rose</h2>
+          <p className="page-description">
             Directional analysis for wind and wave observations.
           </p>
         </div>
@@ -101,7 +99,7 @@ export default function WindRosePage() {
         <div className="grid min-w-0 grid-cols-12 items-start gap-6">
           <Card className="col-span-12 lg:col-span-7">
             <div className="mb-4 flex min-w-0 flex-wrap items-baseline justify-between gap-2">
-              <h3 className="text-base font-semibold text-ink">
+              <h3 className="section-title">
                 {isWind ? "Wind rose" : "Wave rose"}
               </h3>
               <p className="text-xs text-slate-400">

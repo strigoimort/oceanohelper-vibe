@@ -15,12 +15,10 @@ export default function ParticleLayerPanel({
 }: ParticleLayerPanelProps) {
   return (
     <section>
-      <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-        Datasets ({datasets.length})
-      </h2>
+      <h2 className="micro-label">Datasets ({datasets.length})</h2>
 
       {datasets.length === 0 ? (
-        <p className="mt-1 text-sm text-slate-600">No dataset imported</p>
+        <p className="mt-1 body-text">No dataset imported</p>
       ) : (
         <ul className="mt-2 space-y-1">
           {datasets.map((dataset) => (

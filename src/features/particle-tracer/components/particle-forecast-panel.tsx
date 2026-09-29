@@ -27,7 +27,7 @@ export default function ParticleForecastPanel({
   return (
     <section className="border-t border-slate-100 pt-3">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        <h2 className="flex items-center gap-1.5 micro-label">
           <Compass size={12} /> Forecast
         </h2>
 
@@ -53,7 +53,7 @@ export default function ParticleForecastPanel({
       </p>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <label className="block text-xs font-medium text-slate-500">
+        <label className="block label-text">
           Duration (hours)
           <input
             type="number"
@@ -83,7 +83,7 @@ export default function ParticleForecastPanel({
           />
         </label>
 
-        <label className="block text-xs font-medium text-slate-500">
+        <label className="block label-text">
           Interval (hours)
           <input
             type="number"

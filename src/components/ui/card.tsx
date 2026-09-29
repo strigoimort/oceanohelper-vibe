@@ -16,7 +16,7 @@ export default function Card({
   return (
     <Tag
       className={cn(
-        "min-w-0 rounded-2xl border border-slate-200 bg-surface shadow-soft",
+        "min-w-0 rounded-sm border border-slate-200 bg-surface shadow-soft",
         padded && "p-6",
         className,
       )}

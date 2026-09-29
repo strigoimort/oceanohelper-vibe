@@ -124,14 +124,10 @@ export default function GeospatialPropertiesPanel({
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex min-h-0 flex-1 flex-col">
         <section className="flex flex-1 min-h-0 flex-col pb-3">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            Layers ({layers.length})
-          </h2>
+          <h2 className="micro-label">Layers ({layers.length})</h2>
 
           {layers.length === 0 ? (
-            <p className="mt-1 truncate text-sm text-slate-600">
-              No layers created
-            </p>
+            <p className="mt-1 truncate body-text">No layers created</p>
           ) : (
             <div className="mt-1 flex-1 overflow-y-auto panel-scroll">
               <ul className="space-y-0.5">
@@ -251,12 +247,10 @@ export default function GeospatialPropertiesPanel({
         </section>
 
         <section className="shrink-0 h-17 border-t border-slate-100 pt-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            Selected object
-          </h2>
+          <h2 className="micro-label">Selected object</h2>
 
           {!selectedLayer ? (
-            <p className="mt-1 text-sm text-slate-600">None selected</p>
+            <p className="mt-1 body-text">None selected</p>
           ) : (
             <dl className="mt-1 space-y-1 text-sm">
               <div className="flex items-center justify-between">

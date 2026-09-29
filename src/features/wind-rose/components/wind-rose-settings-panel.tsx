@@ -39,9 +39,7 @@ export default function WindRoseSettingsPanel({
 
       <div className="space-y-4">
         <div>
-          <p className="text-xs font-medium text-slate-500">
-            Direction sectors
-          </p>
+          <p className="label-text">Direction sectors</p>
           <div
             className="mt-1 inline-flex rounded-xl border border-slate-200 bg-white p-1"
             role="group"
@@ -102,7 +100,7 @@ function BreakpointField({
   };
 
   return (
-    <label className="block text-xs font-medium text-slate-500">
+    <label className="block label-text">
       Class upper bounds ({unit})
       <input
         type="text"

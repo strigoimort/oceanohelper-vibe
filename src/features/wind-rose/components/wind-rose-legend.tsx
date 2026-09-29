@@ -17,7 +17,7 @@ export default function WindRoseLegend({
 
   return (
     <div className="w-full min-w-0 lg:w-52 lg:shrink-0">
-      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      <h4 className="micro-label">
         {mode === "wind" ? "Speed class (m/s)" : "Height class (m)"}
       </h4>
 
@@ -31,7 +31,7 @@ export default function WindRoseLegend({
           return (
             <li
               key={`${label}-${index}`}
-              className="flex min-w-0 items-center gap-2 text-sm text-slate-600"
+              className="flex min-w-0 items-center gap-2 body-text"
             >
               <span
                 className="size-2.5 shrink-0 rounded-full"

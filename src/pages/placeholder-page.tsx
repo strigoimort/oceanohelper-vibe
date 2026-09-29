@@ -29,7 +29,7 @@ export default function PlaceholderPage({
             {badge}
           </span>
 
-          <span className="text-sm text-slate-500">Placeholder Page</span>
+          <span className="secondary-text">Placeholder Page</span>
         </div>
 
         <h2 className="text-4xl font-semibold">{title}</h2>

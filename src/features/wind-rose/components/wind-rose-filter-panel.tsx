@@ -102,9 +102,7 @@ type FieldGroupProps = {
 function FieldGroup({ title, hint, children }: FieldGroupProps) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-        {title}
-      </p>
+      <p className="micro-label">{title}</p>
       <div className="grid grid-cols-2 gap-3">{children}</div>
       {hint && <p className="mt-1.5 text-xs text-slate-400">{hint}</p>}
     </div>
@@ -119,7 +117,7 @@ type DateFieldProps = {
 
 function DateField({ label, value, onChange }: DateFieldProps) {
   return (
-    <label className="block min-w-0 text-xs font-medium text-slate-500">
+    <label className="block min-w-0 label-text">
       {label}
       <input
         type="date"
@@ -141,7 +139,7 @@ type NumberFieldProps = {
 
 function NumberField({ label, value, min, max, onChange }: NumberFieldProps) {
   return (
-    <label className="block min-w-0 text-xs font-medium text-slate-500">
+    <label className="block min-w-0 label-text">
       {label}
       <input
         type="number"

@@ -82,7 +82,7 @@ export default function AppHeader() {
           </h1>
 
           {description && (
-            <p className="mt-1 text-sm text-slate-500">{description}</p>
+            <p className="mt-1 secondary-text">{description}</p>
           )}
         </div>
       </div> */}

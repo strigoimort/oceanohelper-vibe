@@ -9,11 +9,9 @@ export default function DashboardPage() {
   return (
     <div className="w-full space-y-8">
       <section>
-        <h2 className="text-4xl font-semibold tracking-tight text-ink">
-          Marine Data Workspace
-        </h2>
+        <h2 className="page-title">Marine Data Workspace</h2>
 
-        <p className="mt-4 max-w-5xl text-lg leading-8 text-slate-600">
+        <p className="page-description">
           Integrated tools for geospatial visualization, marine forecasting,
           wave analysis, climatology, and oceanographic data processing.
         </p>
@@ -27,11 +25,9 @@ export default function DashboardPage() {
                 {item.icon}
               </div>
 
-              <h3 className="text-lg font-semibold text-ink">{item.label}</h3>
+              <h3 className="section-title">{item.label}</h3>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                {item.description}
-              </p>
+              <p className="mt-2 leading-6 body-text">{item.description}</p>
             </Card>
           </Link>
         ))}

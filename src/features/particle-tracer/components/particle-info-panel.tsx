@@ -44,9 +44,7 @@ export default function ParticleInfoPanel({
   return (
     <div className="space-y-4">
       <section>
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          Statistics
-        </h2>
+        <h2 className="micro-label">Statistics</h2>
         <dl className="mt-1 space-y-1 text-sm">
           <Row label="Total particles" value={stats.totalParticles} />
           <Row label="Active particles" value={stats.activeParticles} />
@@ -60,12 +58,10 @@ export default function ParticleInfoPanel({
       </section>
 
       <section className="border-t border-slate-100 pt-3">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          Selected particle
-        </h2>
+        <h2 className="micro-label">Selected particle</h2>
 
         {!selectedTrajectory || !currentPoint ? (
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 body-text">
             Click a particle marker on the map to inspect it.
           </p>
         ) : (

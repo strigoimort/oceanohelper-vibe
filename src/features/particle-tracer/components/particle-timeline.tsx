@@ -50,7 +50,7 @@ export default function ParticleTimeline({
         });
 
   return (
-    <div className="flex h-full items-center gap-4 border-t border-slate-200 bg-white px-6">
+    <div className="flex h-full min-w-0 items-center gap-4 overflow-hidden border-t border-slate-200 bg-white px-6">
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -100,7 +100,7 @@ export default function ParticleTimeline({
         value={frameIndex}
         disabled={disabled}
         onChange={(e) => onSeek(Number(e.target.value))}
-        className="h-1.5 flex-1 accent-accent disabled:opacity-40"
+        className="h-1.5 min-w-0 flex-1 accent-accent disabled:opacity-40"
       />
 
       <span className="w-56 shrink-0 text-right text-xs font-medium text-slate-600">

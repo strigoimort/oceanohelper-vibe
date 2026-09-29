@@ -76,7 +76,7 @@ export default function GeospatialImportDialog({
         </div>
 
         {!fileName ? (
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 text-sm text-slate-500 hover:border-accent/40 hover:text-accent">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 secondary-text hover:border-accent/40 hover:text-accent">
             <Upload size={22} />
             Click to select a file
             <span className="text-xs text-slate-400">
@@ -91,7 +91,7 @@ export default function GeospatialImportDialog({
           </label>
         ) : kind === "csv" ? (
           <div className="space-y-4">
-            <p className="truncate text-sm text-slate-600">
+            <p className="truncate body-text">
               <span className="font-medium text-slate-900">{fileName}</span> —{" "}
               {rowCount} rows
             </p>
@@ -130,7 +130,7 @@ export default function GeospatialImportDialog({
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="truncate text-sm text-slate-600">
+            <p className="truncate body-text">
               <span className="font-medium text-slate-900">{fileName}</span> —{" "}
               {shapefileFeatures.length} features
             </p>
@@ -151,7 +151,7 @@ export default function GeospatialImportDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            className="rounded-lg border border-slate-200 px-4 py-2 body-text hover:bg-slate-50"
           >
             Cancel
           </button>
@@ -185,7 +185,7 @@ function ColumnSelect({
   allowEmpty,
 }: ColumnSelectProps) {
   return (
-    <label className="block text-xs font-medium text-slate-500">
+    <label className="block label-text">
       {label}
       <select
         value={value ?? ""}
