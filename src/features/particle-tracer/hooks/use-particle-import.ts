@@ -1,11 +1,15 @@
 import { useCallback, useState } from "react";
 
-import { parseCsvFile } from "../../../services/file-service";
+import {
+  isTabularFile,
+  parseTabularFile,
+} from "../../../services/file-service";
 import {
   detectParticleColumnMapping,
   type ParticleColumnMapping,
 } from "../../../utils/particle-column-mapping";
 import type { RawParticleRecord } from "../../../types/particle";
+import { parseNumericCell } from "../../../utils/numeric";
 import { parseTimestamp } from "../../../utils/particle-tracer";
 
 export type { ParticleColumnMapping };
@@ -19,7 +23,7 @@ const EMPTY_MAPPING: ParticleColumnMapping = {
   direction: null,
 };
 
-/** Handles CSV loading, column mapping, and row validation for the import dialog. */
+/** Handles CSV/Excel loading, column mapping, and row validation for the import dialog. */
 export function useParticleImport() {
   const [isOpen, setIsOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -43,14 +47,14 @@ export function useParticleImport() {
   const loadFile = useCallback(async (file: File) => {
     setError(null);
 
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setError("Unsupported file type. Use a CSV file.");
+    if (!isTabularFile(file)) {
+      setError("Unsupported file type. Use a CSV or Excel (.xlsx) file.");
       return;
     }
 
     try {
       const { headers: parsedHeaders, rows: parsedRows } =
-        await parseCsvFile(file);
+        await parseTabularFile(file);
       if (parsedRows.length === 0) {
         setError("The file doesn't contain any rows.");
         return;
@@ -60,7 +64,7 @@ export function useParticleImport() {
       setRows(parsedRows);
       setMapping(detectParticleColumnMapping(parsedHeaders));
     } catch {
-      setError("Failed to read the CSV file. Please check the format.");
+      setError("Failed to read the file. Please check the format.");
     }
   }, []);
 
@@ -69,8 +73,8 @@ export function useParticleImport() {
       const { particleId, lat, lng, timestamp, speed, direction } = mapping;
       if (!particleId || !lat || !lng || !timestamp) return acc;
 
-      const latValue = Number(row[lat]);
-      const lngValue = Number(row[lng]);
+      const latValue = parseNumericCell(row[lat]);
+      const lngValue = parseNumericCell(row[lng]);
       const timestampValue = row[timestamp];
       const time = parseTimestamp(timestampValue);
 
@@ -90,12 +94,12 @@ export function useParticleImport() {
       };
 
       if (speed) {
-        const speedValue = Number(row[speed]);
+        const speedValue = parseNumericCell(row[speed]);
         if (!Number.isNaN(speedValue)) record.speed = speedValue;
       }
 
       if (direction) {
-        const directionValue = Number(row[direction]);
+        const directionValue = parseNumericCell(row[direction]);
         if (!Number.isNaN(directionValue)) record.direction = directionValue;
       }
 

@@ -9,6 +9,7 @@ import {
   type WindRoseColumnMapping,
 } from "../../../utils/wind-rose-column-mapping";
 import type { WindRoseRecord } from "../../../utils/wind-rose";
+import { parseNumericCell } from "../../../utils/numeric";
 
 export type { WindRoseColumnMapping };
 
@@ -17,13 +18,6 @@ const EMPTY_MAPPING: WindRoseColumnMapping = {
   magnitude: null,
   timestamp: null,
 };
-
-// Empty cells must not become 0, and Excel with an Indonesian locale
-// exports decimal commas ("12,5").
-function parseNumericCell(value: string | undefined): number {
-  if (value === undefined || value.trim() === "") return Number.NaN;
-  return Number(value.trim().replace(",", "."));
-}
 
 export function useWindRoseImport() {
   const [isOpen, setIsOpen] = useState(false);

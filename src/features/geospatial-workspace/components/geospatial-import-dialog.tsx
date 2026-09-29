@@ -1,7 +1,8 @@
-import { Upload, X } from "lucide-react";
-import type { ChangeEvent } from "react";
 import type { Feature } from "geojson";
 
+import ColumnSelect from "../../../components/ui/column-select";
+import ImportDialog from "../../../components/ui/import-dialog";
+import { TABULAR_FILE_EXTENSIONS } from "../../../constants/files";
 import type { ColumnMapping, ImportKind } from "../hooks/use-dataset-import";
 
 type GeospatialImportDialogProps = {
@@ -46,13 +47,6 @@ export default function GeospatialImportDialog({
   onMappingChange,
   shapefileFeatures,
 }: GeospatialImportDialogProps) {
-  if (!isOpen) return null;
-
-  const handleFileInput = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) onFileSelect(file);
-  };
-
   const geometryCounts =
     kind === "shapefile" ? summarizeGeometry(shapefileFeatures) : {};
   const canConfirm =
@@ -60,146 +54,67 @@ export default function GeospatialImportDialog({
     (kind === "shapefile" && shapefileFeatures.length > 0);
 
   return (
-    <div className="fixed inset-0 z-2000 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Import Dataset
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
-          >
-            <X size={18} />
-          </button>
-        </div>
+    <ImportDialog
+      isOpen={isOpen}
+      title="Import Dataset"
+      fileName={fileName}
+      error={error}
+      acceptExtensions={[...TABULAR_FILE_EXTENSIONS, ".zip"]}
+      acceptLabel="CSV, Excel (.xlsx), or zipped Shapefile (.zip)"
+      onFileSelect={onFileSelect}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      canConfirm={canConfirm}
+    >
+      {kind === "csv" ? (
+        <div className="space-y-4">
+          <p className="truncate text-sm text-slate-600">
+            <span className="font-medium text-slate-900">{fileName}</span> —{" "}
+            {rowCount} rows
+          </p>
 
-        {!fileName ? (
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-10 secondary-text hover:border-accent/40 hover:text-accent">
-            <Upload size={22} />
-            Click to select a file
-            <span className="text-xs text-slate-400">
-              CSV or zipped Shapefile (.zip)
-            </span>
-            <input
-              type="file"
-              accept=".csv,.zip"
-              className="hidden"
-              onChange={handleFileInput}
-            />
-          </label>
-        ) : kind === "csv" ? (
-          <div className="space-y-4">
-            <p className="truncate body-text">
-              <span className="font-medium text-slate-900">{fileName}</span> —{" "}
-              {rowCount} rows
-            </p>
-
-            <div className="space-y-3">
-              <ColumnSelect
-                label="Latitude column"
-                headers={headers}
-                value={mapping.lat}
-                onChange={(value) =>
-                  onMappingChange({ ...mapping, lat: value })
-                }
-              />
-              <ColumnSelect
-                label="Longitude column"
-                headers={headers}
-                value={mapping.lng}
-                onChange={(value) =>
-                  onMappingChange({ ...mapping, lng: value })
-                }
-              />
-              <ColumnSelect
-                label="Name column (optional)"
-                headers={headers}
-                value={mapping.name}
-                onChange={(value) =>
-                  onMappingChange({ ...mapping, name: value })
-                }
-                allowEmpty
-              />
-            </div>
-
-            <p className="text-xs text-slate-500">
-              {validCount} of {rowCount} rows have valid coordinates.
-            </p>
-          </div>
-        ) : (
           <div className="space-y-3">
-            <p className="truncate body-text">
-              <span className="font-medium text-slate-900">{fileName}</span> —{" "}
-              {shapefileFeatures.length} features
-            </p>
-
-            <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
-              {Object.entries(geometryCounts).map(([type, count]) => (
-                <p key={type}>
-                  {type} — {count}
-                </p>
-              ))}
-            </div>
+            <ColumnSelect
+              label="Latitude column"
+              headers={headers}
+              value={mapping.lat}
+              onChange={(value) => onMappingChange({ ...mapping, lat: value })}
+            />
+            <ColumnSelect
+              label="Longitude column"
+              headers={headers}
+              value={mapping.lng}
+              onChange={(value) => onMappingChange({ ...mapping, lng: value })}
+            />
+            <ColumnSelect
+              label="Name column (optional)"
+              headers={headers}
+              value={mapping.name}
+              onChange={(value) => onMappingChange({ ...mapping, name: value })}
+              allowEmpty
+            />
           </div>
-        )}
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-200 px-4 py-2 body-text hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={!canConfirm}
-            onClick={onConfirm}
-            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Import
-          </button>
+          <p className="text-xs text-slate-500">
+            {validCount} of {rowCount} rows have valid coordinates.
+          </p>
         </div>
-      </div>
-    </div>
-  );
-}
+      ) : (
+        <div className="space-y-3">
+          <p className="truncate text-sm text-slate-600">
+            <span className="font-medium text-slate-900">{fileName}</span> —{" "}
+            {shapefileFeatures.length} features
+          </p>
 
-type ColumnSelectProps = {
-  label: string;
-  headers: string[];
-  value: string | null;
-  onChange: (value: string | null) => void;
-  allowEmpty?: boolean;
-};
-
-function ColumnSelect({
-  label,
-  headers,
-  value,
-  onChange,
-  allowEmpty,
-}: ColumnSelectProps) {
-  return (
-    <label className="block label-text">
-      {label}
-      <select
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value || null)}
-        className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 focus:border-accent focus:outline-none"
-      >
-        {allowEmpty && <option value="">— None —</option>}
-        {!allowEmpty && !value && <option value="">Select column…</option>}
-        {headers.map((header) => (
-          <option key={header} value={header}>
-            {header}
-          </option>
-        ))}
-      </select>
-    </label>
+          <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+            {Object.entries(geometryCounts).map(([type, count]) => (
+              <p key={type}>
+                {type} — {count}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+    </ImportDialog>
   );
 }
